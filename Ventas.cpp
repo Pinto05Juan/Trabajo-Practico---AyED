@@ -24,13 +24,19 @@ void codificar_clave(char clave[]);
 long busquedaBinaria(const char* nombre, int codigo, Producto &p);
 float actualizar_inventario(int &codigo_producto, int &cantidad);
 
+void actualizar_comision(int id_mozo, float comision);
+
 void leer(); //funcion para probar, no forma parte del codigo definitivo
+
+void cargar();
+void mostrar_mozos();   //funcion auxiliar, no forma parte del programa definitivo
 
 //MAIN
 int main(){
     int dia, mes, anio;
     ingreso_fecha(dia,mes,anio);
     
+    //cargar();
     int id_mozo; char clave[20];
     int login=login_mozo(id_mozo, clave);
 
@@ -41,9 +47,10 @@ int main(){
     
     int codigo_producto, cantidad;
     float comision= actualizar_inventario(codigo_producto,cantidad);
-    cout << "Proceso terminado. Comision=$"<< comision << endl;
     
-    //leer();
+    actualizar_comision(id_mozo, comision);
+    mostrar_mozos();    //funcion para verificar si se actualiza la comision correctamente
+    
 }
 
 //DEFINICION DE FUNCIONES
@@ -220,6 +227,53 @@ long busquedaBinaria(const char* nombre, int codigo, Producto &p) {
     
     fclose(f);
     return pos;
+}
+
+void actualizar_comision(int id_mozo, float comision){
+    FILE* arch_mozos=fopen("Mozos.dat","rb+");
+
+    if(arch_mozos==NULL){
+        cout << "No se pudo abrir el archivo 'Mozos.dat'. Intentelo mas tarde";
+        return;
+    }
+    
+    Mozo m;
+
+    int pos=id_mozo-ID_INICIAL;
+
+    fseek(arch_mozos, pos*sizeof(m), SEEK_SET);
+    int leido=fread(&m, sizeof(Mozo),1,arch_mozos)==1;
+    
+    if(leido==0){
+        cout << "Ha ocurrido un error. Reintentelo mas tarde"<<endl;
+        fclose(arch_mozos);
+        return;
+    }
+
+    m.totalComision+=comision;
+    fseek(arch_mozos, pos*sizeof(m), SEEK_SET);
+    fwrite(&m,sizeof(Mozo),1,arch_mozos);
+
+    fclose(arch_mozos);
+    
+    return;
+}
+
+//NO FORMA PARTE DEL PROGRAMA DEFINITIVO
+void mostrar_mozos(){   //funcion auxiliar para verificar si se actualizo la comision correctamente
+    FILE* arch_mozos=fopen("Mozos.dat","rb");
+    if(arch_mozos==NULL){
+        cout << "no se pudo abrir mozos.dat";
+        return;
+    }
+
+    Mozo m;
+    while(fread(&m,sizeof(Mozo),1,arch_mozos)==1){
+        cout<<"id: "<<m.idMozo<<endl;
+        cout<<"comision: "<<m.totalComision<<endl<<endl;
+    }
+
+    fclose(arch_mozos);
 }
 
 void leer() //funcion para verificar el funcionamiento hasta ahora. se creo "inventarios2.dat" para hacer las pruebas y no modificar el archivo original
