@@ -20,13 +20,17 @@ const int ID_INICIAL = 100;
 void ingreso_fecha(int &dia, int &mes, int &anio);
 int login_mozo(int &id_mozo, char clave[]);
 void codificar_clave(char clave[]);
-void cargar();
+
+long busquedaBinaria(const char* nombre, int codigo, Producto &p);
+float actualizar_inventario(int &codigo_producto, int &cantidad);
+
+void leer(); //funcion para probar, no forma parte del codigo definitivo
 
 //MAIN
 int main(){
     int dia, mes, anio;
     ingreso_fecha(dia,mes,anio);
-    cargar();
+    
     int id_mozo; char clave[20];
     int login=login_mozo(id_mozo, clave);
 
@@ -34,11 +38,12 @@ int main(){
         cout << "Error. Reintentelo mas tarde." << endl;
         return 0;
     }
-    else{
-        cout << endl << "Login exitoso";
-        return 0;
-    }
-
+    
+    int codigo_producto, cantidad;
+    float comision= actualizar_inventario(codigo_producto,cantidad);
+    cout << "Proceso terminado. Comision=$"<< comision << endl;
+    
+    //leer();
 }
 
 //DEFINICION DE FUNCIONES
@@ -104,7 +109,7 @@ int login_mozo(int &id_mozo, char clave[]){     //DEVUELVE 1 SI SE INGRESARON DA
         cin >> clave;
         codificar_clave(clave);
 
-        if(id_mozo < 100){
+        if(id_mozo < ID_INICIAL){
             cout << endl << "El ID o la clave ingresado son incorrectos. Reintentar" << endl;
         }
 
@@ -137,20 +142,101 @@ void codificar_clave(char clave[]) {
     }
 }
 
-//FUNCION PARA PROBAR EL LOGIN, NO FORMA PARTE DEL PROGRAMA DEFINITIVO
-void cargar(){
-    FILE* arch_mozos=fopen("Mozos.dat","wb");
-    for(int i=0; i<5; i++){
-        Mozo m;
+float actualizar_inventario(int &codigo_producto, int &cantidad){   
+    Producto prod;
+    long posicion_prod = -1;
+    bool error_stock = true;
 
-        cout<<"ingrese id: ";
-        cin >> m.idMozo;
-        cout<<"ingrese pass: ";
-        cin >> m.password;
-        codificar_clave(m.password);
-        m.totalComision=0;
+    do{
+        cout << "Ingrese codigo de producto: ";
+        cin >> codigo_producto;
+        
+        //busco el producto en el archivo
+        posicion_prod=busquedaBinaria("inventario2.dat", codigo_producto, prod);
 
-        fwrite(&m, sizeof(Mozo),1,arch_mozos);
+        if(posicion_prod==-1){
+            cout << "Producto no encontrado. Reintentar." << endl;
+        }
+    } while(posicion_prod==-1);
+
+    do{
+        cout << "Ingrese cantidad: ";
+            cin >> cantidad;
+
+            if(prod.stockActual-cantidad < 0){
+                cout << "No hay suficiente stock. La cantidad ingresada es incorrecta. Reintentar." << endl;
+            }
+            else{
+                error_stock=false;
+            }
+    } while (error_stock == true);
+
+    //abro el archivo en modo rb+ para sobreescribir
+    FILE* arch_inventario=fopen("inventario2.dat","rb+");
+
+    if(arch_inventario==NULL){
+        cout << "No se pudo abrir el archivo 'Inventario2.dat'. Intentelo mas tarde." << endl;
+        return -1;
     }
-    fclose(arch_mozos);
+
+    prod.stockActual-=cantidad;
+    fseek(arch_inventario, posicion_prod*sizeof(Producto),SEEK_SET);
+    
+    /*
+    int leido=fread(&prod, sizeof(Producto),1,arch_inventario);
+
+    if(leido==0){
+        cout << "Ha ocurrido un error. Reintentelo mas tarde"<<endl;
+        fclose(arch_inventario);
+        return -1;
+    }
+    */
+    
+    //fseek(arch_inventario, posicion_prod*sizeof(Producto),SEEK_SET);    //POSICIONARSE NUEVAMENTE EN EL PRODUCTO PARA SOBREESCRIBIR LOS DATOS
+    fwrite(&prod, sizeof(Producto),1,arch_inventario);
+    
+    fclose(arch_inventario);
+
+    float comision= prod.precio * cantidad * TASA_COMISION;
+    return comision;
+}
+
+long busquedaBinaria(const char* nombre, int codigo, Producto &p) {
+    FILE* f = fopen(nombre, "rb");
+    if (f == NULL) return -1;
+
+    fseek(f, 0, SEEK_END);
+    long n = ftell(f) / sizeof(Producto); // cantidad de registros
+    long pri = 0, ult = n - 1, pos = -1;
+
+    while (pri <= ult && pos == -1) {
+        long med = (pri + ult) / 2;
+        fseek(f, med * sizeof(Producto), SEEK_SET);
+        fread(&p, sizeof(Producto), 1, f);
+        if (p.codigo == codigo) pos = med;
+        else if (codigo > p.codigo) pri = med + 1;
+        else ult = med - 1;
+    }
+    
+    fclose(f);
+    return pos;
+}
+
+void leer() //funcion para verificar el funcionamiento hasta ahora. se creo "inventarios2.dat" para hacer las pruebas y no modificar el archivo original
+{
+    FILE* arch_inv= fopen("Inventario2.dat","rb");
+    if(arch_inv==NULL){
+        cout << "No se pudo abrir.";
+        return;
+    }
+
+    Producto p;
+    while(fread(&p,sizeof(Producto),1,arch_inv)==1){
+        cout<<"codigo: " << p.codigo << endl;
+        cout<<"descrripcion: " << p.descripcion << endl;
+        cout<<"precio: " << p.precio << endl;
+        cout<<"stock actual: " << p.stockActual << endl << endl;        
+    }
+
+    fclose(arch_inv);
 }
