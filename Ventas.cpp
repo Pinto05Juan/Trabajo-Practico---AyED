@@ -4,9 +4,7 @@
 using namespace std;
 
 //STRUCTS
-struct Producto {
-    int codigo; char descripcion[50]; float precio; int stockActual;
-};
+struct Producto {int codigo; char descripcion[50]; float precio; int stockActual;};
 
 struct Mozo { int idMozo; char nombre[50]; char password[20]; float totalComision; };
 struct Comanda { int idMozo; int codigoProducto; int cantidad; float comision; };
@@ -26,31 +24,22 @@ float actualizar_inventario(int &codigo_producto, int &cantidad);
 
 void actualizar_comision(int id_mozo, float comision);
 
-void leer(); //funcion para probar, no forma parte del codigo definitivo
+void generar_nombre_del_archivo(char nombre_archivo[]);
+void generar_planilla_del_dia(char nombre_del_archivo[]);
+void leer_planilla_del_dia(char nombre_archivo[]);
 
-void cargar();
-void mostrar_mozos();   //funcion auxiliar, no forma parte del programa definitivo
+void ordenar(char nombre_del_archivo[]);
 
 //MAIN
 int main(){
-    int dia, mes, anio;
-    ingreso_fecha(dia,mes,anio);
     
-    //cargar();
-    int id_mozo; char clave[20];
-    int login=login_mozo(id_mozo, clave);
+    char nombre_del_archivo[24];
+    
+    generar_nombre_del_archivo(nombre_del_archivo);
+    generar_planilla_del_dia(nombre_del_archivo);
 
-    if(login==-1){
-        cout << "Error. Reintentelo mas tarde." << endl;
-        return 0;
-    }
-    
-    int codigo_producto, cantidad;
-    float comision= actualizar_inventario(codigo_producto,cantidad);
-    
-    actualizar_comision(id_mozo, comision);
-    mostrar_mozos();    //funcion para verificar si se actualiza la comision correctamente
-    
+    //funcion auxiliar para verificar el funcionamiento del programa
+    leer_planilla_del_dia(nombre_del_archivo);
 }
 
 //DEFINICION DE FUNCIONES
@@ -74,7 +63,7 @@ void ingreso_fecha(int &dia, int &mes, int &anio){
         cin >> mes;
 
         if(mes <1 || mes > 12 
-            || (dia>29 && mes==2)   //febrero tiene como maximo 28 dias
+            || (dia>29 && mes==2)   //febrero tiene como maximo 29 dias
             || (dia == 31  && (mes==4 || mes== 6 || mes == 9 || mes == 11))){   //abril, junio, septiembre y noviembre tienen 30 dias
             cout << "Mes invalido. Reintentar" << endl;
         }
@@ -109,7 +98,7 @@ int login_mozo(int &id_mozo, char clave[]){     //DEVUELVE 1 SI SE INGRESARON DA
     bool encontrado=false;
 
     do{
-        cout << "Ingrese ID del mozo: ";
+        cout << endl << "Ingrese ID del mozo: ";
         cin >> id_mozo;
 
         cout << "Ingrese clave: ";
@@ -170,7 +159,11 @@ float actualizar_inventario(int &codigo_producto, int &cantidad){
         cout << "Ingrese cantidad: ";
             cin >> cantidad;
 
-            if(prod.stockActual-cantidad < 0){
+            if(cantidad<=0){
+                 cout << "La cantidad ingresada no es valida. Reintentar." << endl;
+            }
+
+            else if(prod.stockActual-cantidad < 0){
                 cout << "No hay suficiente stock. La cantidad ingresada es incorrecta. Reintentar." << endl;
             }
             else{
@@ -189,17 +182,6 @@ float actualizar_inventario(int &codigo_producto, int &cantidad){
     prod.stockActual-=cantidad;
     fseek(arch_inventario, posicion_prod*sizeof(Producto),SEEK_SET);
     
-    /*
-    int leido=fread(&prod, sizeof(Producto),1,arch_inventario);
-
-    if(leido==0){
-        cout << "Ha ocurrido un error. Reintentelo mas tarde"<<endl;
-        fclose(arch_inventario);
-        return -1;
-    }
-    */
-    
-    //fseek(arch_inventario, posicion_prod*sizeof(Producto),SEEK_SET);    //POSICIONARSE NUEVAMENTE EN EL PRODUCTO PARA SOBREESCRIBIR LOS DATOS
     fwrite(&prod, sizeof(Producto),1,arch_inventario);
     
     fclose(arch_inventario);
@@ -259,38 +241,102 @@ void actualizar_comision(int id_mozo, float comision){
     return;
 }
 
-//NO FORMA PARTE DEL PROGRAMA DEFINITIVO
-void mostrar_mozos(){   //funcion auxiliar para verificar si se actualizo la comision correctamente
-    FILE* arch_mozos=fopen("Mozos.dat","rb");
-    if(arch_mozos==NULL){
-        cout << "no se pudo abrir mozos.dat";
-        return;
-    }
+void generar_nombre_del_archivo(char nombre_archivo[]){
+    int dia, mes, anio;
+    ingreso_fecha(dia,mes,anio);
+    
+    nombre_archivo[0] = 'c';
+    nombre_archivo[1] = 'o';
+    nombre_archivo[2] = 'm';
+    nombre_archivo[3] = 'a';
+    nombre_archivo[4] = 'n';
+    nombre_archivo[5] = 'd';
+    nombre_archivo[6] = 'a';
+    nombre_archivo[7] = 's';
+    nombre_archivo[8] = '_';
 
-    Mozo m;
-    while(fread(&m,sizeof(Mozo),1,arch_mozos)==1){
-        cout<<"id: "<<m.idMozo<<endl;
-        cout<<"comision: "<<m.totalComision<<endl<<endl;
-    }
+    nombre_archivo[9] = '0' + dia / 10;
+    nombre_archivo[10] = '0' + dia % 10;
 
-    fclose(arch_mozos);
+    nombre_archivo[11] = '-';
+
+    nombre_archivo[12] = '0' + mes / 10;
+    nombre_archivo[13] = '0' + mes % 10;
+
+    nombre_archivo[14] = '-';
+
+    nombre_archivo[15] = '0' + anio / 1000;
+    nombre_archivo[16] = '0' + (anio / 100) % 10;
+    nombre_archivo[17] = '0' + (anio / 10) % 10;
+    nombre_archivo[18] = '0' + anio % 10;
+
+    nombre_archivo[19] = '.';
+    nombre_archivo[20] = 'd';
+    nombre_archivo[21] = 'a';
+    nombre_archivo[22] = 't';
+    nombre_archivo[23] = '\0';
 }
 
-void leer() //funcion para verificar el funcionamiento hasta ahora. se creo "inventarios2.dat" para hacer las pruebas y no modificar el archivo original
-{
-    FILE* arch_inv= fopen("Inventario2.dat","rb");
-    if(arch_inv==NULL){
-        cout << "No se pudo abrir.";
+void generar_planilla_del_dia(char nombre_del_archivo[]){
+    FILE* planilla = fopen(nombre_del_archivo,"ab+");
+
+    if(planilla==NULL){
+        cout << "Error al crear planilla del dia"<<endl;
         return;
     }
 
-    Producto p;
-    while(fread(&p,sizeof(Producto),1,arch_inv)==1){
-        cout<<"codigo: " << p.codigo << endl;
-        cout<<"descrripcion: " << p.descripcion << endl;
-        cout<<"precio: " << p.precio << endl;
-        cout<<"stock actual: " << p.stockActual << endl << endl;        
-    }
+    cout << endl <<"Bienvenido a la planilla del dia " << nombre_del_archivo[9] << nombre_del_archivo[10] 
+    << "/" << nombre_del_archivo[12] << nombre_del_archivo[13] 
+    << "/" << nombre_del_archivo[15]  << nombre_del_archivo[16] << nombre_del_archivo[17] << nombre_del_archivo[18] 
+    << endl << "Cargue todas las ventas correspondientes: " << endl << endl;
+        
+    bool seguir=true;    
 
-    fclose(arch_inv);
+    while(seguir==true){
+        int id_mozo; char clave[20];
+        int login=login_mozo(id_mozo, clave);
+
+        if(login==-1){
+            cout << "Error. Reintentelo mas tarde." << endl;
+            fclose(planilla);
+            return;
+        }
+        
+        else{
+            int codigo_producto, cantidad;
+            float comision= actualizar_inventario(codigo_producto,cantidad);
+            actualizar_comision(id_mozo, comision);
+            
+            Comanda venta;
+            venta.idMozo=id_mozo;
+            venta.codigoProducto=codigo_producto;
+            venta.cantidad=cantidad;
+            venta.comision=comision;
+
+            fwrite(&venta, sizeof(Comanda),1,planilla);
+
+            cout << endl << "Desea cargar otra venta? (0: No | 1: Si): ";
+            cin >> seguir;
+        }       
+    }
+    fclose(planilla);
+}
+
+//NO FORMAN PARTE DEL PROGRAMA DEFINITIVO
+
+
+void leer_planilla_del_dia(char nombre_archivo[]){      //funcion auxiliar para imprimir comandas_dd-mm-aaaa y verificar que este ordenado
+    FILE* arch=fopen(nombre_archivo,"rb");
+    if(arch==NULL){
+        cout <<"error al leer la planilla del dia"<<endl;
+        return;
+    }
+    Comanda comanda;
+    while(fread(&comanda,sizeof(Comanda),1,arch)==1){
+        cout << "ID: " << comanda.idMozo <<endl;
+        cout << "Codigo producto: " << comanda.codigoProducto<<endl;
+        cout << "Cantidad: " << comanda.cantidad<<endl;
+        cout << "Comision: $" << comanda.comision<<endl<<endl;
+    }
+    fclose(arch);
 }
