@@ -160,7 +160,7 @@ float actualizar_inventario(int &codigo_producto, int &cantidad){
             cin >> cantidad;
 
             if(cantidad<=0){
-                 cout << "La cantidad ingresada no es valida. Reintentar." << endl;
+                cout << "La cantidad ingresada no es valida. Reintentar." << endl;
             }
 
             else if(prod.stockActual-cantidad < 0){
@@ -320,10 +320,59 @@ void generar_planilla_del_dia(char nombre_del_archivo[]){
         }       
     }
     fclose(planilla);
+    ordenar(nombre_del_archivo);
 }
 
-//NO FORMAN PARTE DEL PROGRAMA DEFINITIVO
+void ordenar(char nombre_del_archivo[]){
+    FILE* planilla = fopen(nombre_del_archivo,"rb+");
 
+    if(planilla==NULL){
+        cout << "Error al abrir planilla del dia para ordenarla"<<endl;
+        return;
+    }
+
+    // Averiguamos cuántas comandas hay
+    fseek(planilla, 0, SEEK_END);
+    long cantidad = ftell(planilla) / sizeof(Comanda);
+
+    Comanda menor;
+    Comanda actual;
+    Comanda aux;
+
+    for (long i = 0; i < cantidad - 1; i++) {
+        
+        fseek(planilla, i * sizeof(Comanda), SEEK_SET); 
+        fread(&aux, sizeof(Comanda), 1, planilla);  // almacena la venta original que esta en la posicion i
+        
+        menor = aux;    //supone que esa es la de menor id_mozo
+        long posicionMenor = i;
+
+        // recorre las demas posiciones buscando una venta con menor id_mozo
+        for (long j = i + 1; j < cantidad; j++) {
+            fseek(planilla, j * sizeof(Comanda), SEEK_SET);
+            fread(&actual, sizeof(Comanda), 1, planilla);
+
+            if (actual.idMozo < menor.idMozo) {     //si encuentra una, actualiza "menor" y almacena esa posicion
+                menor = actual;
+                posicionMenor = j;
+            }
+        }
+
+        //realizar el intercambio si se encontro una venta con menor id_mozo
+        if (posicionMenor != i) {       
+            fseek(planilla, i * sizeof(Comanda), SEEK_SET);
+            fwrite(&menor, sizeof(Comanda), 1, planilla);   //escribe la venta de menor id_mozo en la posicion i
+
+            fseek(planilla, posicionMenor * sizeof(Comanda), SEEK_SET);
+            fwrite(&aux, sizeof(Comanda), 1, planilla);     //escribe la venta original de la posicion i en donde estaba la venta de menor id_mozo
+        }
+    }
+
+    fclose(planilla);
+}
+
+
+//NO FORMA PARTE DEL PROGRAMA DEFINITIVO
 
 void leer_planilla_del_dia(char nombre_archivo[]){      //funcion auxiliar para imprimir comandas_dd-mm-aaaa y verificar que este ordenado
     FILE* arch=fopen(nombre_archivo,"rb");
