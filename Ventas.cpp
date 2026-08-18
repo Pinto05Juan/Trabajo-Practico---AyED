@@ -13,22 +13,29 @@ struct Comanda { int idMozo; int codigoProducto; int cantidad; float comision; }
 const float TASA_COMISION = 0.10f; // la comision de cada venta es el 10% de lo vendido
 const int K = 7; //codificacion de clave
 const int ID_INICIAL = 100;
+const long ERROR_ABRIENDO_INVENTARIO = -10;
 
 //PROTOTIPOS DE LAS FUNCIONES
 void ingreso_fecha(int &dia, int &mes, int &anio);
-int login_mozo(int &id_mozo, char clave[]);
+bool login_mozo(int &id_mozo, char clave[]);
 void codificar_clave(char clave[]);
+bool comparar_claves(char clave_ingresada[], char clave_guardada[]);
 
 long busquedaBinaria(const char* nombre, int codigo, Producto &p);
-float actualizar_inventario(int &codigo_producto, int &cantidad);
+bool actualizar_inventario(int &codigo_producto, int &cantidad, float &comision);
 
-void actualizar_comision(int id_mozo, float comision);
+bool actualizar_comision(int id_mozo, float comision);
 
 void generar_nombre_del_archivo(char nombre_archivo[]);
 void generar_planilla_del_dia(char nombre_del_archivo[]);
-void leer_planilla_del_dia(char nombre_archivo[]);
 
 void ordenar(char nombre_del_archivo[]);
+
+/*FUNCIONES AUXILIARES (NO FORMAN PARTE DEL CODIGO DEFINITIVO)
+
+void leer_planilla_del_dia(char nombre_archivo[]);
+void mostrar_inventario();
+*/
 
 //MAIN
 int main(){
@@ -38,8 +45,9 @@ int main(){
     generar_nombre_del_archivo(nombre_del_archivo);
     generar_planilla_del_dia(nombre_del_archivo);
 
-    //funcion auxiliar para verificar el funcionamiento del programa
-    leer_planilla_del_dia(nombre_del_archivo);
+    //funciones auxiliares para verificar el funcionamiento del programa
+    //leer_planilla_del_dia(nombre_del_archivo);
+    //mostrar_inventario();
 }
 
 //DEFINICION DE FUNCIONES
@@ -86,12 +94,12 @@ void ingreso_fecha(int &dia, int &mes, int &anio){
     }
 }
 
-int login_mozo(int &id_mozo, char clave[]){     //DEVUELVE 1 SI SE INGRESARON DATOS CORRECTOS O -1 SI OCURRIO UN ERROR CON EL ARCHIVO
+bool login_mozo(int &id_mozo, char clave[]){     //DEVUELVE 1 SI SE INGRESARON DATOS CORRECTOS O 0 SI OCURRIO UN ERROR CON EL ARCHIVO
     FILE* arch_mozos=fopen("Mozos.dat","rb");
 
     if(arch_mozos==NULL){
         cout << "No se pudo abrir el archivo 'Mozos.dat'" << endl;
-        return -1;
+        return 0;
     }
     
     Mozo m;
@@ -115,10 +123,10 @@ int login_mozo(int &id_mozo, char clave[]){     //DEVUELVE 1 SI SE INGRESARON DA
             fseek(arch_mozos, pos*sizeof(m), SEEK_SET); //PUP, posicionarse donde "deberia" estar el mozo buscado
             int leido=fread(&m, sizeof(Mozo),1,arch_mozos);
             
-            if(leido==1 && m.idMozo==id_mozo && strcmp(m.password,clave)==0){     //ID y clave ingresada son correctos
+            if(leido==1 && m.idMozo==id_mozo && comparar_claves(m.password,clave)==1){     //ID y clave ingresada son correctos
                 encontrado=true;
             }
-
+            
             else {
                 cout << endl << "El ID o la clave ingresado son incorrectos. Reintentar" << endl;
             }
@@ -138,7 +146,24 @@ void codificar_clave(char clave[]) {
     }
 }
 
-float actualizar_inventario(int &codigo_producto, int &cantidad){   
+bool comparar_claves(char clave_ingresada[], char clave_guardada[]){
+    int i = 0;
+
+    while(clave_ingresada[i] != '\0' && clave_guardada[i] != '\0'){
+        if(clave_ingresada[i] != clave_guardada[i]){
+            return false;
+        }
+        i++;
+    }
+
+    if(clave_ingresada[i] != '\0' || clave_guardada[i] != '\0'){    //revisa si una clave es mas corta que la otra
+        return false;
+    }
+
+    return true;    //las claves son iguales
+}
+
+bool actualizar_inventario(int &codigo_producto, int &cantidad, float &comision){   
     Producto prod;
     long posicion_prod = -1;
     bool error_stock = true;
@@ -148,51 +173,58 @@ float actualizar_inventario(int &codigo_producto, int &cantidad){
         cin >> codigo_producto;
         
         //busco el producto en el archivo
-        posicion_prod=busquedaBinaria("inventario2.dat", codigo_producto, prod);
+        posicion_prod=busquedaBinaria("inventario.dat", codigo_producto, prod);
 
-        if(posicion_prod==-1){
+        if(posicion_prod==ERROR_ABRIENDO_INVENTARIO){
+            return false;
+        }
+        else if(posicion_prod==-1){
             cout << "Producto no encontrado. Reintentar." << endl;
         }
     } while(posicion_prod==-1);
 
     do{
         cout << "Ingrese cantidad: ";
-            cin >> cantidad;
+        cin >> cantidad;
 
-            if(cantidad<=0){
-                cout << "La cantidad ingresada no es valida. Reintentar." << endl;
-            }
+        if(cantidad<=0){
+            cout << "La cantidad ingresada no es valida. Reintentar." << endl;
+        }
 
-            else if(prod.stockActual-cantidad < 0){
-                cout << "No hay suficiente stock. La cantidad ingresada es incorrecta. Reintentar." << endl;
-            }
-            else{
-                error_stock=false;
-            }
+        else if(prod.stockActual-cantidad < 0){
+            cout << "No hay suficiente stock. La cantidad ingresada es incorrecta. Reintentar." << endl;
+        }
+        else{
+            error_stock=false;
+        }
     } while (error_stock == true);
 
     //abro el archivo en modo rb+ para sobreescribir
-    FILE* arch_inventario=fopen("inventario2.dat","rb+");
+    FILE* arch_inventario=fopen("inventario.dat","rb+");
 
     if(arch_inventario==NULL){
-        cout << "No se pudo abrir el archivo 'Inventario2.dat'. Intentelo mas tarde." << endl;
-        return -1;
+        cout << "No se pudo abrir el archivo 'Inventario.dat'. Intentelo mas tarde." << endl;
+        return false;
     }
 
     prod.stockActual-=cantidad;
-    fseek(arch_inventario, posicion_prod*sizeof(Producto),SEEK_SET);
-    
+
+    fseek(arch_inventario, posicion_prod*sizeof(Producto),SEEK_SET);   
     fwrite(&prod, sizeof(Producto),1,arch_inventario);
     
     fclose(arch_inventario);
 
-    float comision= prod.precio * cantidad * TASA_COMISION;
-    return comision;
+    comision= prod.precio * cantidad * TASA_COMISION;
+    
+    return true;
 }
 
 long busquedaBinaria(const char* nombre, int codigo, Producto &p) {
     FILE* f = fopen(nombre, "rb");
-    if (f == NULL) return -1;
+    if (f == NULL){
+        cout << "No se pudo abrir 'inventario.dat'"<<endl;
+        return ERROR_ABRIENDO_INVENTARIO;
+    } 
 
     fseek(f, 0, SEEK_END);
     long n = ftell(f) / sizeof(Producto); // cantidad de registros
@@ -211,12 +243,12 @@ long busquedaBinaria(const char* nombre, int codigo, Producto &p) {
     return pos;
 }
 
-void actualizar_comision(int id_mozo, float comision){
+bool actualizar_comision(int id_mozo, float comision){
     FILE* arch_mozos=fopen("Mozos.dat","rb+");
 
     if(arch_mozos==NULL){
         cout << "No se pudo abrir el archivo 'Mozos.dat'. Intentelo mas tarde";
-        return;
+        return false;
     }
     
     Mozo m;
@@ -226,10 +258,10 @@ void actualizar_comision(int id_mozo, float comision){
     fseek(arch_mozos, pos*sizeof(m), SEEK_SET);
     int leido=fread(&m, sizeof(Mozo),1,arch_mozos)==1;
     
-    if(leido==0){
+    if(leido==0 || m.idMozo != id_mozo){
         cout << "Ha ocurrido un error. Reintentelo mas tarde"<<endl;
         fclose(arch_mozos);
-        return;
+        return false;
     }
 
     m.totalComision+=comision;
@@ -238,7 +270,7 @@ void actualizar_comision(int id_mozo, float comision){
 
     fclose(arch_mozos);
     
-    return;
+    return true;
 }
 
 void generar_nombre_del_archivo(char nombre_archivo[]){
@@ -290,22 +322,33 @@ void generar_planilla_del_dia(char nombre_del_archivo[]){
     << "/" << nombre_del_archivo[15]  << nombre_del_archivo[16] << nombre_del_archivo[17] << nombre_del_archivo[18] 
     << endl << "Cargue todas las ventas correspondientes: " << endl << endl;
         
-    bool seguir=true;    
+    int seguir=1;    
 
-    while(seguir==true){
+    while(seguir==1){
         int id_mozo; char clave[20];
-        int login=login_mozo(id_mozo, clave);
+        bool login=login_mozo(id_mozo, clave);
 
-        if(login==-1){
-            cout << "Error. Reintentelo mas tarde." << endl;
+        if(login==0){
+            cout << "Error con el login. Reintentelo mas tarde." << endl;
             fclose(planilla);
             return;
         }
         
         else{
             int codigo_producto, cantidad;
-            float comision= actualizar_inventario(codigo_producto,cantidad);
-            actualizar_comision(id_mozo, comision);
+            float comision;
+
+            if(actualizar_inventario(codigo_producto,cantidad,comision)==0){
+                cout << "Ha ocurrido un error durante la actualizacion del inventario. Reintentelo mas tarde.";
+                fclose(planilla);
+                return;
+            }
+
+            if(actualizar_comision(id_mozo, comision)==0){
+                cout << "Ha ocurrido un error durante la actualizacion de la comision. Reintentelo mas tarde.";
+                fclose(planilla);
+                return;
+            }
             
             Comanda venta;
             venta.idMozo=id_mozo;
@@ -317,6 +360,11 @@ void generar_planilla_del_dia(char nombre_del_archivo[]){
 
             cout << endl << "Desea cargar otra venta? (0: No | 1: Si): ";
             cin >> seguir;
+
+            while(seguir!=0 && seguir!=1){
+                cout << "Error. Ingrese un numero valido (0: No | 1: Si): ";
+                cin >> seguir;
+            }
         }       
     }
     fclose(planilla);
@@ -372,7 +420,7 @@ void ordenar(char nombre_del_archivo[]){
 }
 
 
-//NO FORMA PARTE DEL PROGRAMA DEFINITIVO
+/* FUNCIONES AUXILIARES (NO FORMAN PARTE DEL PROGRAMA DEFINITIVO, SOLO SE USAN PARA PROBAR EL FUNCIONAMIENTO)
 
 void leer_planilla_del_dia(char nombre_archivo[]){      //funcion auxiliar para imprimir comandas_dd-mm-aaaa y verificar que este ordenado
     FILE* arch=fopen(nombre_archivo,"rb");
@@ -389,3 +437,21 @@ void leer_planilla_del_dia(char nombre_archivo[]){      //funcion auxiliar para 
     }
     fclose(arch);
 }
+
+void mostrar_inventario(){
+    FILE* arch=fopen("inventario.dat","rb");
+    if(arch==NULL){
+        cout <<"error al leer el inventario"<<endl;
+        return;
+    }
+
+    Producto p;
+    cout<< endl;
+    while(fread(&p, sizeof(Producto),1,arch)){
+        cout<< endl<< "Codigo: " <<p.codigo <<"    Descripcion: "<<p.descripcion << "  Precio: $"<<p.precio<<"  Stock: " <<p.stockActual;
+    }
+
+    fclose(arch);
+}
+
+*/
