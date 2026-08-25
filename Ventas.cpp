@@ -31,11 +31,11 @@ void generar_planilla_del_dia(char nombre_del_archivo[]);
 
 void ordenar(char nombre_del_archivo[]);
 
-/*FUNCIONES AUXILIARES (NO FORMAN PARTE DEL CODIGO DEFINITIVO)
+//FUNCIONES AUXILIARES (NO FORMAN PARTE DEL CODIGO DEFINITIVO)
 
 void leer_planilla_del_dia(char nombre_archivo[]);
-void mostrar_inventario();
-*/
+//void mostrar_inventario();
+
 
 //MAIN
 int main(){
@@ -46,7 +46,7 @@ int main(){
     generar_planilla_del_dia(nombre_del_archivo);
 
     //funciones auxiliares para verificar el funcionamiento del programa
-    //leer_planilla_del_dia(nombre_del_archivo);
+    leer_planilla_del_dia(nombre_del_archivo);
     //mostrar_inventario();
 }
 
@@ -59,7 +59,7 @@ void ingreso_fecha(int &dia, int &mes, int &anio){
         cin >> dia;
 
         if(dia <1 || dia > 31){
-            cout << "Dia invalido. Reintentar" << endl;
+            cout << "Dia invalido. Reintentar" << endl << endl;
         }
         else
             valido=true;
@@ -82,12 +82,25 @@ void ingreso_fecha(int &dia, int &mes, int &anio){
 
     valido=false;
     while(!valido){
-        cout << endl << "Ingrese anio: ";
+        cout << endl << "Ingrese anio (2025 en adelante): ";
         cin >> anio;
 
         if(anio < 2025){
             cout << "Anio invalido. Reintentar" << endl;
         }
+
+        /*Un año es bisiesto si cumple alguna de estas dos condiciones:
+        a) es divisible por 4 y no es divisible por 100
+        b) es divisible por 400
+        */
+        else if((dia == 29 && mes == 2)){
+            if(!((anio % 4 == 0 && anio % 100 != 0) || (anio % 400 == 0))){
+                cout<<"El anio ingresado no es bisiesto. Reintentar"<<endl;
+            }
+            else{
+                valido=true;
+            }
+        }   
 
         else
             valido=true;
@@ -328,7 +341,7 @@ void generar_planilla_del_dia(char nombre_del_archivo[]){
         int id_mozo; char clave[20];
         bool login=login_mozo(id_mozo, clave);
 
-        if(login==0){
+        if(login==false){
             cout << "Error con el login. Reintentelo mas tarde." << endl;
             fclose(planilla);
             return;
@@ -338,13 +351,13 @@ void generar_planilla_del_dia(char nombre_del_archivo[]){
             int codigo_producto, cantidad;
             float comision;
 
-            if(actualizar_inventario(codigo_producto,cantidad,comision)==0){
+            if(actualizar_inventario(codigo_producto,cantidad,comision)==false){
                 cout << "Ha ocurrido un error durante la actualizacion del inventario. Reintentelo mas tarde.";
                 fclose(planilla);
                 return;
             }
 
-            if(actualizar_comision(id_mozo, comision)==0){
+            if(actualizar_comision(id_mozo, comision)==false){
                 cout << "Ha ocurrido un error durante la actualizacion de la comision. Reintentelo mas tarde.";
                 fclose(planilla);
                 return;
@@ -369,6 +382,7 @@ void generar_planilla_del_dia(char nombre_del_archivo[]){
     }
     fclose(planilla);
     ordenar(nombre_del_archivo);
+    cout << endl << "Planilla generada/actualizada con exito!";
 }
 
 void ordenar(char nombre_del_archivo[]){
@@ -420,7 +434,7 @@ void ordenar(char nombre_del_archivo[]){
 }
 
 
-/* FUNCIONES AUXILIARES (NO FORMAN PARTE DEL PROGRAMA DEFINITIVO, SOLO SE USAN PARA PROBAR EL FUNCIONAMIENTO)
+//FUNCIONES AUXILIARES (NO FORMAN PARTE DEL PROGRAMA DEFINITIVO, SOLO SE USAN PARA PROBAR EL FUNCIONAMIENTO)
 
 void leer_planilla_del_dia(char nombre_archivo[]){      //funcion auxiliar para imprimir comandas_dd-mm-aaaa y verificar que este ordenado
     FILE* arch=fopen(nombre_archivo,"rb");
@@ -438,6 +452,7 @@ void leer_planilla_del_dia(char nombre_archivo[]){      //funcion auxiliar para 
     fclose(arch);
 }
 
+/*
 void mostrar_inventario(){
     FILE* arch=fopen("inventario.dat","rb");
     if(arch==NULL){
@@ -453,5 +468,4 @@ void mostrar_inventario(){
 
     fclose(arch);
 }
-
 */
