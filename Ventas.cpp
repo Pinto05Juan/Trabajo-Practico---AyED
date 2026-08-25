@@ -17,23 +17,22 @@ const long ERROR_ABRIENDO_INVENTARIO = -10;
 
 //PROTOTIPOS DE LAS FUNCIONES
 void ingreso_fecha(int &dia, int &mes, int &anio);
+void generar_nombre_del_archivo(char nombre_archivo[]);
+
 bool login_mozo(int &id_mozo, char clave[]);
 void codificar_clave(char clave[]);
 bool comparar_claves(char clave_ingresada[], char clave_guardada[]);
 
 long busquedaBinaria(const char* nombre, int codigo, Producto &p);
 bool actualizar_inventario(int &codigo_producto, int &cantidad, float &comision);
-
 bool actualizar_comision(int id_mozo, float comision);
 
-void generar_nombre_del_archivo(char nombre_archivo[]);
 void generar_planilla_del_dia(char nombre_del_archivo[]);
-
 void ordenar(char nombre_del_archivo[]);
 
 //FUNCIONES AUXILIARES (NO FORMAN PARTE DEL CODIGO DEFINITIVO)
 
-void leer_planilla_del_dia(char nombre_archivo[]);
+//void leer_planilla_del_dia(char nombre_archivo[]);
 //void mostrar_inventario();
 
 
@@ -46,7 +45,7 @@ int main(){
     generar_planilla_del_dia(nombre_del_archivo);
 
     //funciones auxiliares para verificar el funcionamiento del programa
-    leer_planilla_del_dia(nombre_del_archivo);
+    //leer_planilla_del_dia(nombre_del_archivo);
     //mostrar_inventario();
 }
 
@@ -382,7 +381,7 @@ void generar_planilla_del_dia(char nombre_del_archivo[]){
     }
     fclose(planilla);
     ordenar(nombre_del_archivo);
-    cout << endl << "Planilla generada/actualizada con exito!";
+    cout << endl << "Planilla generada/actualizada con exito!" <<endl;
 }
 
 void ordenar(char nombre_del_archivo[]){
@@ -436,6 +435,7 @@ void ordenar(char nombre_del_archivo[]){
 
 //FUNCIONES AUXILIARES (NO FORMAN PARTE DEL PROGRAMA DEFINITIVO, SOLO SE USAN PARA PROBAR EL FUNCIONAMIENTO)
 
+/*
 void leer_planilla_del_dia(char nombre_archivo[]){      //funcion auxiliar para imprimir comandas_dd-mm-aaaa y verificar que este ordenado
     FILE* arch=fopen(nombre_archivo,"rb");
     if(arch==NULL){
@@ -451,7 +451,7 @@ void leer_planilla_del_dia(char nombre_archivo[]){      //funcion auxiliar para 
     }
     fclose(arch);
 }
-
+*/
 /*
 void mostrar_inventario(){
     FILE* arch=fopen("inventario.dat","rb");
