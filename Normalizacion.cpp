@@ -41,7 +41,11 @@ const int k = 7;
 
 void Clave(char* clave, int k)
 	{
-	
+		int i = 0;
+		for(i=0; clave[i] != '\0'; i++)
+		{
+			clave[i] += k;
+		}
 	}
 
 void procesarMozo(FILE* fMozos, ComandaHistorica c, int& idMozo)
