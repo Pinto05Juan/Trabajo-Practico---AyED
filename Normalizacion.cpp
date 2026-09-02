@@ -50,7 +50,38 @@ void Clave(char* clave, int k)
 
 void procesarMozo(FILE* fMozos, ComandaHistorica c, int& idMozo)
 	{
+	Mozo mozoAux;
+	bool mozoEncontrado = false;
+	fseek(fMozos, 0, SEEK_SET);
+	while(fread(&mozoAux, sizeof(Mozo), 1, fMozos) == 1)
+	{
+		if (strcmp(mozoAux.nombre, c.nombreMozo) == 0) //mismo nombre
+		{
+			mozoEncontrado = true;
+			mozoAux.totalComision += c.comision;
+				
+			fseek(fMozos, -(long)sizeof(Mozo), SEEK_CUR); //retrocedo puntero 
+			fwrite(&mozoAux, sizeof(Mozo), 1, fMozos); //Actualizo archivo de mozos
+			break; //salgo para continuar con el siguiente 
+		}
+	}
 		
+	if(!mozoEncontrado)
+	{
+		Mozo newMozo;
+		newMozo.idMozo = idMozo; //Como es un arhivo nuevo, la primera vez que pase por este if sera el primer id y despues el segundo y asi sucesivamente
+		strcpy(newMozo.nombre, c.nombreMozo);
+		newMozo.totalComision = c.comision; //la comanda arranca en el valor de la primera comanda
+	
+		char claveM[20];
+		sprintf(claveM, "%d", newMozo.idMozo); //copio el id del mozo en el char de la clave, como es entero uso d
+		Clave(claveM, k);
+		strcpy(newMozo.password, claveM); //cargo la clave en el nuevo mozo
+		
+		fseek(fMozos, 0, SEEK_END); //Al final para caegar el nuevo mozo en orden
+		fwrite(&newMozo, sizeof(Mozo), 1, fMozos);
+		idMozo++;
+		}
 	}
 
 
