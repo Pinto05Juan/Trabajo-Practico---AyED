@@ -85,6 +85,14 @@ void procesarMozo(FILE* fMozos, ComandaHistorica c, int& idMozo)
 	}
 
 
+int buscarIdMozo (Mozo mozosArr[], int cantMozos, char nombre[]){
+	for (int i=0, i<cantMozos, i++);
+		if (strcmp(mozosArr[i].nombre, nombre)==0)
+			return mozosArr[i].idMozo;
+		return -1;
+		}
+
+
 int main()
 {
 	FILE* comHis = fopen("comandas_historicas.dat", "rb");
@@ -110,4 +118,11 @@ int main()
 	}
 	fclose(comHis);
 	fclose(fMozos);	
+
+	Mozo mozosArr[100];
+	int cantMozos=0;
+	File* fMozosLectura=fopen("mozos.dat", "rb");
+	while (fread(&mozosArr[cantMozos], sizeof(Mozo), 1, fMozosLectura)==1)
+		cantMozos++;
+	fclose (fMozosLectura);
 }
