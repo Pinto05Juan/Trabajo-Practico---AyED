@@ -86,11 +86,28 @@ void procesarMozo(FILE* fMozos, ComandaHistorica c, int& idMozo)
 
 
 int buscarIdMozo (Mozo mozosArr[], int cantMozos, char nombre[]){
-	for (int i=0, i<cantMozos, i++);
+	for (int i=0; i<cantMozos; i++);
 		if (strcmp(mozosArr[i].nombre, nombre)==0)
 			return mozosArr[i].idMozo;
 		return -1;
 		}
+
+void ArmarNombreArchivoDia (char fecha[], char nombreArchivo[]){ //funcion auxiliar para armar el nombre del archivo a partir de la fecha
+	sprintf(nombreArchivo, "comandas_%s.dat", fecha);
+}
+
+void acumularVenta (int codigos[], int cantidades[], int &cantCodigos, int codigoProducto, int cantidadVendida){ //funcion auxiliar para acumular la cantidad vendida por producto
+	for (int i=0; i<cantCodigos; i++){
+		if(codigos[i]==codigoProducto){
+			cantidades[i]+=cantidadVendida;
+			return;
+		}
+	}
+	//si no lo encontro, es un producto nuevo en el acumulado
+	 codigos[cantCodigos] = codigoProducto;
+	 cantidades[cantCodigos] = cantidadVendida;
+	 cantCodigos++;
+}
 
 
 int main()
