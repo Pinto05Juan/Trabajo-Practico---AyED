@@ -86,9 +86,11 @@ void procesarMozo(FILE* fMozos, ComandaHistorica c, int& idMozo)
 
 
 int buscarIdMozo (Mozo mozosArr[], int cantMozos, char nombre[]){
-	for (int i=0; i<cantMozos; i++);
-		if (strcmp(mozosArr[i].nombre, nombre)==0)
+	for (int i=0; i<cantMozos; i++){
+		if (strcmp(mozosArr[i].nombre, nombre)==0){
 			return mozosArr[i].idMozo;
+		}
+	}
 		return -1;
 		}
 
@@ -108,6 +110,34 @@ void acumularVenta (int codigos[], int cantidades[], int &cantCodigos, int codig
 	 cantidades[cantCodigos] = cantidadVendida;
 	 cantCodigos++;
 }
+
+void OrdenarArchivoPorMozo (char nombreDeArchivo[]){
+	Comanda comandasDias [200]; //alcanza para todas las ventas de un solo dia
+	int cantComandas=0;
+
+	FILE* fDia=fopen(nombreDeArchivo, "rb");
+	while (fread(&comandasDias[cantComandas], sizeof (Comanda), 1, fDia)==1){
+		cantComandas++;
+	}
+	fclose (fDia);
+
+	for (int i=0; i<cantComandas-1; i++){ //ordeno por id mozo conn el metodo de burbuja
+		for (int j=0; j<cantComandas-1-i; j++){
+			if (comandasDias[j].idMozo> comandasDias[j+1].idMozo){
+				Comanda aux=comandasDias[j];
+				comandasDias[j]=comandasDias[j+1];
+				comandasDias[j+1]=aux;
+			}
+		}
+	}
+
+	FILE* fDiaEscritura = fopen  (nombreDeArchivo, "wb"); //reescribo el archivo ya ordenado
+	fwrite (comandasDias, sizeof (Comanda), cantComandas, fDiaEscritura);
+	fclose (fDiaEscritura);
+
+
+
+
 
 
 int main()
