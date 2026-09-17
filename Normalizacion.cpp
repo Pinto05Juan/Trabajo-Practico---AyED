@@ -95,7 +95,7 @@ int buscarIdMozo (Mozo mozosArr[], int cantMozos, char nombre[]){
 		}
 
 void ArmarNombreArchivoDia (char fecha[], char nombreArchivo[]){ //funcion auxiliar para armar el nombre del archivo a partir de la fecha
-	sprintf(nombreArchivo, "comandas_%s.dat", fecha);
+	sprintf(nombreArchivo, "comandas_%s.dat", fecha); 
 }
 
 void acumularVenta (int codigos[], int cantidades[], int &cantCodigos, int codigoProducto, int cantidadVendida){ //funcion auxiliar para acumular la cantidad vendida por producto
@@ -115,14 +115,14 @@ void OrdenarArchivoPorMozo (char nombreDeArchivo[]){
 	Comanda comandasDias [200]; //alcanza para todas las ventas de un solo dia
 	int cantComandas=0;
 
-	FILE* fDia=fopen(nombreDeArchivo, "rb");
+	FILE* fDia=fopen(nombreDeArchivo, "rb"); //leo todo el archivo del dia y lo cargo en la memoria
 	while (fread(&comandasDias[cantComandas], sizeof (Comanda), 1, fDia)==1){
-		cantComandas++;
+		cantComandas++; //cuento cuantas comandas tiene el dia
 	}
 	fclose (fDia);
 
 	for (int i=0; i<cantComandas-1; i++){ //ordeno por id mozo conn el metodo de burbuja
-		for (int j=0; j<cantComandas-1-i; j++){
+		for (int j=0; j<cantComandas-1-i; j++){ //achico con -i porque en cada pasada ya queda un elemento bien ubicado al final
 			if (comandasDias[j].idMozo> comandasDias[j+1].idMozo){
 				Comanda aux=comandasDias[j];
 				comandasDias[j]=comandasDias[j+1];
@@ -134,8 +134,7 @@ void OrdenarArchivoPorMozo (char nombreDeArchivo[]){
 	FILE* fDiaEscritura = fopen  (nombreDeArchivo, "wb"); //reescribo el archivo ya ordenado
 	fwrite (comandasDias, sizeof (Comanda), cantComandas, fDiaEscritura);
 	fclose (fDiaEscritura);
-
-
+}
 
 
 
@@ -168,7 +167,7 @@ int main()
 
 	Mozo mozosArr[100];
 	int cantMozos=0;
-	File* fMozosLectura=fopen("mozos.dat", "rb");
+	FILE* fMozosLectura=fopen("mozos.dat", "rb");
 	while (fread(&mozosArr[cantMozos], sizeof(Mozo), 1, fMozosLectura)==1)
 		cantMozos++;
 	fclose (fMozosLectura);
