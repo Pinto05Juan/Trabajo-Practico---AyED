@@ -98,6 +98,18 @@ void ArmarNombreArchivoDia (char fecha[], char nombreArchivo[]){ //funcion auxil
 	sprintf(nombreArchivo, "comandas_%s.dat", fecha); 
 }
 
+void registrarFecha(char fechas[][11], int& cantFechas, char fecha[])
+{
+    for(int i = 0; i < cantFechas; i++)
+    {
+        if(strcmp(fechas[i], fecha) == 0)
+            return; // ya la tenía registrada
+    }
+    strcpy(fechas[cantFechas], fecha);
+    cantFechas++;
+}
+
+
 void acumularVenta (int codigos[], int cantidades[], int &cantCodigos, int codigoProducto, int cantidadVendida){ //funcion auxiliar para acumular la cantidad vendida por producto
 	for (int i=0; i<cantCodigos; i++){
 		if(codigos[i]==codigoProducto){
@@ -198,6 +210,37 @@ int main()
 		cantMozos++;
 	fclose (fMozosLectura);
 
+	FILE* comHis2=fopen("comandas_historicas.dat", "rb");
+	 
+	int codigosVendidos[100];
+	int cantVendida[100];
+	int cantCodigos=0;
+
+	char fechasVistas [50][11];
+	int cantFechas=0;
+
+	ComandaHistorica c2;
+	while (fread(&c2, sizeof(ComandaHistorica), 1, comHis2)==1){
+		int idMozoActual= buscarIdMozo(mozosArr, cantMozos, c2.nombreMozo);
+
+		Comanda nuevaComanda;
+		nuevaComanda.idMozo=idMozoActual;
+		nuevaComanda.cantidad=c2.cantidad;
+		nuevaComanda.comision=c2.comision;
+		nuevaComanda.codigoProducto=c2.codigoProducto;
+
+		char nombreArchivoDia[30];
+		ArmarNombreArchivoDia(c2.fecha, nombreArchivoDia);
+
+		FILE* fDia=fopen(nombreArchivoDia, "ab");
+		fwrite(&nuevaComanda, sizeof(Comanda), 1, fDia);
+		fclose(fDia);
+
+		registrarFecha(fechasVistas, cantFechas, c2.fecha);
+
+		acumularVenta(codigosVendidos, cantVendida, cantCodigos, c2.codigoProducto);
+	}
+	fclose (comHis2);
 
 
 
