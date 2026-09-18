@@ -223,6 +223,7 @@ int main()
 	while (fread(&c2, sizeof(ComandaHistorica), 1, comHis2)==1){
 		int idMozoActual= buscarIdMozo(mozosArr, cantMozos, c2.nombreMozo);
 
+		//armo el registro que va a la planilla del dia usando el idmozo en lugar del nombre
 		Comanda nuevaComanda;
 		nuevaComanda.idMozo=idMozoActual;
 		nuevaComanda.cantidad=c2.cantidad;
@@ -232,17 +233,22 @@ int main()
 		char nombreArchivoDia[30];
 		ArmarNombreArchivoDia(c2.fecha, nombreArchivoDia);
 
-		FILE* fDia=fopen(nombreArchivoDia, "ab");
+		FILE* fDia=fopen(nombreArchivoDia, "ab"); //uso ab porque si el archivo del dia no existe, lo crea, y si ya existe le agrega al final
 		fwrite(&nuevaComanda, sizeof(Comanda), 1, fDia);
 		fclose(fDia);
 
-		registrarFecha(fechasVistas, cantFechas, c2.fecha);
+		registrarFecha(fechasVistas, cantFechas, c2.fecha); //guardo la fecha en las fechas vistas
 
-		acumularVenta(codigosVendidos, cantVendida, cantCodigos, c2.codigoProducto);
+		acumularVenta(codigosVendidos, cantVendida, cantCodigos, c2.codigoProducto, c2.cantidad); //acumulo cuanto se vendio de cada producto para despues actualizar el stock
 	}
 	fclose (comHis2);
 
+	for (int i=0; i<cantFechas; i++){ //recorro cada fecha que se vio y ordeno su archivo correspondiente
+		char nombreArchivoDia[30];
+		ArmarNombreArchivoDia(fechasVistas[i], nombreArchivoDia);
+		OrdenarArchivoPorMozo(nombreArchivoDia);
+	}
 
 
-	ActualizarStock (codigosVendidos, cantVendida, cantCodigos, "inventarios.dat");
+	ActualizarStock (codigosVendidos, cantVendida, cantCodigos, "inventarios.dat"); //resta del stock lo acumulado por producto sin reescribir el inventario
 }
