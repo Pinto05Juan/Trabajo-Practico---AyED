@@ -11,8 +11,17 @@ struct Comanda
     float comision;
 };
 
+struct Producto
+{
+    int codigo;
+    char descripcion[50];
+    float precio;
+    int stockActual;
+};
+
 void generarNombreDelArchivo(char nombreArchivo[]);
-void leerComandas(const char nombreArchivo[]);
+void generarResumen(const char nombreArchivo[]);
+float buscarPrecio(int codigoProducto);
 
 int main()
 {
@@ -20,33 +29,9 @@ int main()
 
     generarNombreDelArchivo(nombreArchivo);
 
-    leerComandas(nombreArchivo);
+    generarResumen(nombreArchivo);
 
     return 0;
-}
-
-void leerComandas(const char nombreArchivo[])
-{
-    FILE* archivo = fopen(nombreArchivo, "rb");
-
-    if (archivo == NULL)
-    {
-        cout << "No se pudo abrir el archivo." << endl;
-        return;
-    }
-
-    Comanda comanda;
-
-    while (fread(&comanda, sizeof(Comanda), 1, archivo) == 1)
-    {
-        cout << "Mozo: " << comanda.idMozo << endl;
-        cout << "Producto: " << comanda.codigoProducto << endl;
-        cout << "Cantidad: " << comanda.cantidad << endl;
-        cout << "Comision: $" << comanda.comision << endl;
-        cout << endl;
-    }
-
-    fclose(archivo);
 }
 
 void generarNombreDelArchivo(char nombreArchivo[])
@@ -93,6 +78,90 @@ void generarNombreDelArchivo(char nombreArchivo[])
     nombreArchivo[25] = '\0';
 }
 
+float buscarPrecio(int codigoProducto)
+{
+    FILE* archivo = fopen("inventario.dat", "rb");
+
+    if (archivo == NULL)
+    {
+        return -1;
+    }
+
+    Producto producto;
+
+    while (fread(&producto, sizeof(Producto), 1, archivo) == 1)
+    {
+        if (producto.codigo == codigoProducto)
+        {
+            fclose(archivo);
+            return producto.precio;
+        }
+    }
+
+    fclose(archivo);
+
+    return -1;
+}
+
+void generarResumen(const char nombreArchivo[])
+{
+    FILE* archivo = fopen(nombreArchivo, "rb");
+
+    if (archivo == NULL)
+    {
+        cout << "No se pudo abrir el archivo semanal." << endl;
+        return;
+    }
+
+    Comanda comanda;
+
+    int mozoActual = -1;
+    int productosVendidos = 0;
+    float comisionMozo = 0;
+    float totalBuffet = 0;
+
+    while (fread(&comanda, sizeof(Comanda), 1, archivo) == 1)
+    {
+        if (mozoActual == -1)
+        {
+            mozoActual = comanda.idMozo;
+        }
+
+        if (comanda.idMozo != mozoActual)
+        {
+            cout << "Mozo: " << mozoActual << endl;
+            cout << "Productos vendidos: " << productosVendidos << endl;
+            cout << "Comision: $" << comisionMozo << endl;
+            cout << endl;
+
+            mozoActual = comanda.idMozo;
+            productosVendidos = 0;
+            comisionMozo = 0;
+        }
+
+        productosVendidos += comanda.cantidad;
+        comisionMozo += comanda.comision;
+
+        float precio = buscarPrecio(comanda.codigoProducto);
+
+        if (precio != -1)
+        {
+            totalBuffet += precio * comanda.cantidad;
+        }
+    }
+
+    if (mozoActual != -1)
+    {
+        cout << "Mozo: " << mozoActual << endl;
+        cout << "Productos vendidos: " << productosVendidos << endl;
+        cout << "Comision: $" << comisionMozo << endl;
+        cout << endl;
+    }
+
+    cout << "Total del buffet: $" << totalBuffet << endl;
+
+    fclose(archivo);
+}
 
 
 
