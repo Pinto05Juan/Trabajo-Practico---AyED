@@ -137,6 +137,32 @@ void OrdenarArchivoPorMozo (char nombreDeArchivo[]){
 }
 
 
+void ActualizarStock (int codigos[], int cantVendida[], int cantCodigos, char archivoInventario[]){ //resta del inventario lo que se vendio de cada producto
+
+FILE* fInv=fopen (archivoInventario, "rb"); //uso rb+ en lugar de wb para leer y escribir sin truncar el archivo
+if(fInv==NULL){
+	cout<<"Error al abrir inventario"<<endl;
+	return;
+}
+Producto p;
+while (fread(&p, sizeof(Producto), 1, fInv)==1){
+	for (int i=0; i<cantCodigos; i++){ //busco si el producto tiene ventas acumuladas
+		if(codigos[i]==p.codigo){
+			p.stockActual=-cantVendida[i];
+			if (p.stockActual<0){ //munca deja stock negativo
+				p.stockActual=0;
+			}
+			fseek (fInv, -(long)sizeof(Producto), SEEK_CUR); // retrocedo al inicio del registro
+			fwrite (&p, sizeof(Producto), 1, fInv); //sobreescribo solo ese producto
+			break;
+			}
+		}
+	}
+	fclose (fInv);
+}
+
+
+
 
 
 int main()
@@ -171,4 +197,9 @@ int main()
 	while (fread(&mozosArr[cantMozos], sizeof(Mozo), 1, fMozosLectura)==1)
 		cantMozos++;
 	fclose (fMozosLectura);
+
+
+
+
+	ActualizarStock (codigosVendidos, cantVendida, cantCodigos, "inventarios.dat");
 }
