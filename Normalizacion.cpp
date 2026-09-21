@@ -167,7 +167,6 @@ while (fread(&p, sizeof(Producto), 1, fInv)==1){
 			fseek (fInv, -(long)sizeof(Producto), SEEK_CUR); // retrocedo al inicio del registro
 			fwrite (&p, sizeof(Producto), 1, fInv); //sobreescribo solo ese produco
 			fflush (fInv);
-			fseek(fInv, 0, SEEK_CUR); // reseteo el stream antes del proximo read
 			break;
 			}
 		}
