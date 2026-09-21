@@ -151,7 +151,7 @@ void OrdenarArchivoPorMozo (char nombreDeArchivo[]){
 
 void ActualizarStock (int codigos[], int cantVendida[], int cantCodigos, char archivoInventario[]){ //resta del inventario lo que se vendio de cada producto
 
-FILE* fInv=fopen (archivoInventario, "rb"); //uso rb+ en lugar de wb para leer y escribir sin truncar el archivo
+FILE* fInv=fopen (archivoInventario, "rb+"); //uso rb+ en lugar de wb para leer y escribir sin truncar el archivo
 if(fInv==NULL){
 	cout<<"Error al abrir inventario"<<endl;
 	return;
@@ -160,7 +160,7 @@ Producto p;
 while (fread(&p, sizeof(Producto), 1, fInv)==1){
 	for (int i=0; i<cantCodigos; i++){ //busco si el producto tiene ventas acumuladas
 		if(codigos[i]==p.codigo){
-			p.stockActual=-cantVendida[i];
+			p.stockActual-=cantVendida[i];
 			if (p.stockActual<0){ //munca deja stock negativo
 				p.stockActual=0;
 			}
@@ -250,5 +250,5 @@ int main()
 	}
 
 
-	ActualizarStock (codigosVendidos, cantVendida, cantCodigos, "inventarios.dat"); //resta del stock lo acumulado por producto sin reescribir el inventario
+	ActualizarStock (codigosVendidos, cantVendida, cantCodigos, "inventario.dat"); //resta del stock lo acumulado por producto sin reescribir el inventario
 }
