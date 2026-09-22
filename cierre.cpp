@@ -37,7 +37,7 @@ int main() {
 
             if(prueba != NULL) {
                 
-                if(!existDia) {
+                if(!existDia) { //Cuando registra por primera vez un dia con venta de esa semana
                     copiarContenido(nombreDia, actual);
                     existDia = true;
                 } else {
@@ -51,14 +51,17 @@ int main() {
             dia++;
         }
 
-        if(existDia) {
+        if(existDia) { 
             char nombreSemanal[26];
             generarNombreDelArchivoSemanal(nombreSemanal, numeroDeSemana, mes);
             copiarContenido(actual, nombreSemanal);
-            //cout << "Generada: " << nombreSemanal << endl;
             numeroDeSemana++;
         }
     }
+
+    //Se borran ambos archivos temporales
+    remove(temporal1);
+    remove(temporal2);
 
     return 0;
 }
@@ -197,7 +200,7 @@ void generarNombreDelArchivoSemanal(char nombre_archivo[], int numeroDeSemana, i
     nombre_archivo[15] = '_';
 
     nombre_archivo[16] = 's';
-    nombre_archivo[17] = '0' + numeroDeSemana; // ACA VA EL NUMERO DE LA SEMANA
+    nombre_archivo[17] = '0' + numeroDeSemana; 
     nombre_archivo[18] = '-';
 
     nombre_archivo[19] = '0' + mes / 10;;
