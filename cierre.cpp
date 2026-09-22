@@ -2,7 +2,6 @@
 
 using namespace std;
 
-
 struct Comanda { int idMozo; int codigoProducto; int cantidad; float comision; };
 
 void generarNombreDelArchivoSemanal(char nombre_archivo[], int numeroDeSemana, int mes);
@@ -17,9 +16,10 @@ int main() {
     ingresoFecha(mes, anio);
 
     int diaDelMes = getDiasDelMes(mes, anio);
-    int dia = 1; 
+    int dia = 1; // Representa el dia del mes
     int numeroDeSemana = 1;
 
+    //se guardan en archivos temporales las comandas para su apareo posterios
     const char* temporal1 = "temporal1.dat";
     const char* temporal2 = "temporal2.dat";
 
@@ -27,7 +27,7 @@ int main() {
         bool existDia = false;
         const char* actual = temporal1;
         const char* siguiente = temporal2;
-        int contadorDias = 0;
+        int contadorDias = 0; // Cuantos dias llevo en la semana
 
         while(contadorDias < 7 && dia <= diaDelMes) {
             char nombreDia[24];
@@ -42,10 +42,12 @@ int main() {
                     existDia = true;
                 } else {
                     apareoDePlanillas(actual, nombreDia, siguiente);
-                    const char* aux = actual;
+                    const char* aux = actual; //swap para intercambiar los roles de lectura o escritura
                     actual = siguiente;
                     siguiente = aux;
                 }
+
+                fclose(prueba);
             }
             contadorDias++;
             dia++;
@@ -54,7 +56,7 @@ int main() {
         if(existDia) { 
             char nombreSemanal[26];
             generarNombreDelArchivoSemanal(nombreSemanal, numeroDeSemana, mes);
-            copiarContenido(actual, nombreSemanal);
+            copiarContenido(actual, nombreSemanal); //actual -> acumulado en la semana
             numeroDeSemana++;
         }
     }
@@ -73,6 +75,7 @@ void copiarContenido(const char* leer, const char* escribir) {
 
     if(origen == NULL || destino == NULL) {
         cout << "Error de apertura en la copia del contenido" << endl;
+        return;
     }
 
     while(fread(&c, sizeof(Comanda), 1, origen) == 1) {
@@ -84,41 +87,12 @@ void copiarContenido(const char* leer, const char* escribir) {
 }
 
 void generarNombreDelDia(char nombreArchivo[], int dia, int mes, int anio) {
-    nombreArchivo[0] = 'c';
-    nombreArchivo[1] = 'o';
-    nombreArchivo[2] = 'm';
-    nombreArchivo[3] = 'a';
-    nombreArchivo[4] = 'n';
-    nombreArchivo[5] = 'd';
-    nombreArchivo[6] = 'a';
-    nombreArchivo[7] = 's';
-    nombreArchivo[8] = '_';
-
-    nombreArchivo[9] = '0' + dia / 10;
-    nombreArchivo[10] = '0' + dia % 10;
-
-    nombreArchivo[11] = '-';
-
-    nombreArchivo[12] = '0' + mes / 10;
-    nombreArchivo[13] = '0' + mes % 10;
-
-    nombreArchivo[14] = '-';
-
-    nombreArchivo[15] = '0' + anio / 1000;
-    nombreArchivo[16] = '0' + (anio / 100) % 10;
-    nombreArchivo[17] = '0' + (anio / 10) % 10;
-    nombreArchivo[18] = '0' + anio % 10;
-
-    nombreArchivo[19] = '.';
-    nombreArchivo[20] = 'd';
-    nombreArchivo[21] = 'a';
-    nombreArchivo[22] = 't';
-    nombreArchivo[23] = '\0';
+    sprintf(nombreArchivo, "comandas_%02d-%02d-%04d.dat", dia, mes, anio);
 }
 
 int getDiasDelMes(int mes, int anio) {
     int dias[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
-    if (mes == 2 && ((anio % 4 == 0 && anio % 100 != 0) || anio % 400 == 0)) {
+    if (mes == 2 && ((anio % 4 == 0 && anio % 100 != 0) || anio % 400 == 0)) { //caso año bisiesto
         return 29;
     }
 
@@ -181,33 +155,5 @@ void ingresoFecha(int &mes, int& anio) {
 }
 
 void generarNombreDelArchivoSemanal(char nombre_archivo[], int numeroDeSemana, int mes){
-    nombre_archivo[0] = 'c';
-    nombre_archivo[1] = 'o';
-    nombre_archivo[2] = 'm';
-    nombre_archivo[3] = 'a';
-    nombre_archivo[4] = 'n';
-    nombre_archivo[5] = 'd';
-    nombre_archivo[6] = 'a';
-    nombre_archivo[7] = 's';
-    nombre_archivo[8] = '_';
-
-    nombre_archivo[9] = 's';
-    nombre_archivo[10] = 'e';
-    nombre_archivo[11] = 'm';
-    nombre_archivo[12] = 'a';
-    nombre_archivo[13] = 'n';
-    nombre_archivo[14] = 'a';
-    nombre_archivo[15] = '_';
-
-    nombre_archivo[16] = 's';
-    nombre_archivo[17] = '0' + numeroDeSemana; 
-    nombre_archivo[18] = '-';
-
-    nombre_archivo[19] = '0' + mes / 10;;
-    nombre_archivo[20] = '0' + mes % 10;
-    nombre_archivo[21] = '.';
-    nombre_archivo[22] = 'd';
-    nombre_archivo[23] = 'a';
-    nombre_archivo[24] = 't';
-    nombre_archivo[25] = '\0';
+    sprintf(nombre_archivo, "comandas_semana_s%d-%02d.dat", numeroDeSemana, mes);
 }
