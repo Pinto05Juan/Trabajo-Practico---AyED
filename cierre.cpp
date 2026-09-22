@@ -10,6 +10,7 @@ void ingresoFecha(int &mes, int& anio);
 int getDiasDelMes(int mes, int anio);
 void copiarContenido(const char* leer, const char* escribir);
 void generarNombreDelDia(char nombreArchivo[], int dia, int mes, int anio);
+void apareoDePlanillas(const char* nomA, const char* nomB, const char* nomC);
 
 int main() {
     int mes, anio;
@@ -19,8 +20,8 @@ int main() {
     int dia = 1; 
     int numeroDeSemana = 1;
 
-    const char* temporal1 = "";
-    const char* temporal2 = "";
+    const char* temporal1 = "temporal1.dat";
+    const char* temporal2 = "temporal2.dat";
 
     while (dia <= diaDelMes) {
         bool existDia = false;
@@ -54,7 +55,7 @@ int main() {
             char nombreSemanal[26];
             generarNombreDelArchivoSemanal(nombreSemanal, numeroDeSemana, mes);
             copiarContenido(actual, nombreSemanal);
-            cout << "Generada: " << nombreSemanal << endl;
+            //cout << "Generada: " << nombreSemanal << endl;
             numeroDeSemana++;
         }
     }
@@ -66,6 +67,10 @@ void copiarContenido(const char* leer, const char* escribir) {
     FILE* origen = fopen(leer, "rb");
     FILE* destino = fopen(escribir, "wb");
     Comanda c;
+
+    if(origen == NULL || destino == NULL) {
+        cout << "Error de apertura en la copia del contenido" << endl;
+    }
 
     while(fread(&c, sizeof(Comanda), 1, origen) == 1) {
         fwrite(&c, sizeof(Comanda), 1, destino);
