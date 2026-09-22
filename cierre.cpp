@@ -5,27 +5,74 @@ using namespace std;
 
 struct Comanda { int idMozo; int codigoProducto; int cantidad; float comision; };
 
-void generarNombreDelArchivoSemanal(char nombre_archivo[]);
+void generarNombreDelArchivoSemanal(char nombre_archivo[], int numeroDeSemana, int mes);
 void ingresoFecha(int &mes, int& anio);
 int getDiasDelMes(int mes, int anio);
-void generarPlanillaSemanal();
-void apareoDePlanillas();
+void copiarContenido(const char* leer, const char* escribir);
+void generarNombreDelDia(char nombreArchivo[], int dia, int mes, int anio);
 
 int main() {
-    int mes, int anio;
+    int mes, anio;
+    ingresoFecha(mes, anio);
+
+    int diaDelMes = getDiasDelMes(mes, anio);
     int dia = 1; 
+    int numeroDeSemana = 1;
 
+    const char* temporal1 = "";
+    const char* temporal2 = "";
 
-    char fecha [26];
+    while (dia <= diaDelMes) {
+        bool existDia = false;
+        const char* actual = temporal1;
+        const char* siguiente = temporal2;
+        int contadorDias = 0;
 
-    generarNombreDelArchivoSemanal(fecha);
+        while(contadorDias < 7 && dia <= diaDelMes) {
+            char nombreDia[24];
+            generarNombreDelDia(nombreDia, dia, mes, anio);
 
+            FILE* prueba = fopen(nombreDia, "rb");
+
+            if(prueba != NULL) {
+                
+                if(!existDia) {
+                    copiarContenido(nombreDia, actual);
+                    existDia = true;
+                } else {
+                    apareoDePlanillas(actual, nombreDia, siguiente);
+                    const char* aux = actual;
+                    actual = siguiente;
+                    siguiente = aux;
+                }
+            }
+            contadorDias++;
+            dia++;
+        }
+
+        if(existDia) {
+            char nombreSemanal[26];
+            generarNombreDelArchivoSemanal(nombreSemanal, numeroDeSemana, mes);
+            copiarContenido(actual, nombreSemanal);
+            cout << "Generada: " << nombreSemanal << endl;
+            numeroDeSemana++;
+        }
+    }
 
     return 0;
 }
 
-void generarPlanillaSemanal() {
-    
+void copiarContenido(const char* leer, const char* escribir) {
+    FILE* origen = fopen(leer, "rb");
+    FILE* destino = fopen(escribir, "wb");
+    Comanda c;
+
+    while(fread(&c, sizeof(Comanda), 1, origen) == 1) {
+        fwrite(&c, sizeof(Comanda), 1, destino);
+    }
+
+    fclose(origen);
+    fclose(destino);
 }
 
 void generarNombreDelDia(char nombreArchivo[], int dia, int mes, int anio) {
@@ -108,7 +155,6 @@ void apareoDePlanillas(const char* nomA, const char* nomB, const char* nomC) {
     fclose(planillaA); fclose(planillaB); fclose(nuevaPlanilla);
 }
 
-
 void ingresoFecha(int &mes, int& anio) {
     bool valido = false;
     while(!valido){
@@ -126,10 +172,7 @@ void ingresoFecha(int &mes, int& anio) {
     }
 }
 
-void generarNombreDelArchivoSemanal(char nombre_archivo[], int numeroDeSemana){
-    int mes, anio;
-    ingresoFecha(mes,anio);
-    
+void generarNombreDelArchivoSemanal(char nombre_archivo[], int numeroDeSemana, int mes){
     nombre_archivo[0] = 'c';
     nombre_archivo[1] = 'o';
     nombre_archivo[2] = 'm';
