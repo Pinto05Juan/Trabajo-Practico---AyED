@@ -3,31 +3,48 @@
 #include <cstring>
 using namespace std;
 
-//STRUCTS
-struct Producto {int codigo; char descripcion[50]; float precio; int stockActual;};
 
+
+/*  -----   STRUCTS   -----  */
+struct Producto {int codigo; char descripcion[50]; float precio; int stockActual;};
 struct Mozo { int idMozo; char nombre[50]; char password[20]; float totalComision; };
 struct Comanda { int idMozo; int codigoProducto; int cantidad; float comision; };
 
-//CONST
+
+
+/*  -----   CONSTANTES   -----  */
 const float TASA_COMISION = 0.10f; // la comision de cada venta es el 10% de lo vendido
 const int K = 7; //codificacion de clave
 const int ID_INICIAL = 100;
 const long ERROR_ABRIENDO_INVENTARIO = -10;
 
-//PROTOTIPOS DE LAS FUNCIONES
+
+
+/*  -----   PROTOTIPOS DE LAS FUNCIONES   -----  */
+//PIDE AL USUARIO INGRESAR LA FECHA Y LA GUARDA EN 3 VARIABLES (VERIFICACIONES DE VALIDEZ INCLUIDAS) 
 void ingreso_fecha(int &dia, int &mes, int &anio);
+//CARGA EN UN ARRAY EL NOMBRE DEL ARCHIVO ("DD-MM-AAAA.DAT")
 void generar_nombre_del_archivo(char nombre_archivo[]);
 
+/*PIDE EL ID Y CLAVE DE UN MOZO Y LO BUSCA EN MOZOS.DAT . DEVUELVE 1 SI EL LOGIN FUE EXITOSO O 0 SI OCURRIO UN ERROR CON EL ARCHIVO
+(VERIFICACIONES DE VALIDEZ INCLUIDAS) */
 bool login_mozo(int &id_mozo, char clave[]);
+//CODIFICA LA CLAVE INGRESADA EN LA FUNCION "login_mozo"  
 void codificar_clave(char clave[]);
+/*COMPARA LA CLAVE INGRESADA CON LA CLAVE CARGADA EN "MOZOS.DAT"*/
 bool comparar_claves(char clave_ingresada[], char clave_guardada[]);
 
+/*BUSCA EL PRODUCTO (POR CODIGO) EN INVENTARIO.DAT Y DEVUELVE SU POSICION (SI NO LO ENCUENTRA, DEVUELVE -1)
+(LOS DATOS DEL PRODUCTO ENCONTRADO QUEDAN CARGADOS EN LA VARIABLE DEL TIPO "Producto")*/
 long busquedaBinaria(const char* nombre, int codigo, Producto &p);
+/*PIDE INGRESAR CODIGO DE PRODUCTO Y CANTIDAD VENDIDA
+MODIFICA INVENTARIO.DAT RESTANDO LA CANTIDAD VENDIDA Y CALCULA LA COMISION CORRESPONDIENTE A LA VENTA REALIZADA*/
 bool actualizar_inventario(int &codigo_producto, int &cantidad, float &comision);
+//MODIFICA MOZOS.DAT SUMANDO LA COMISION CORRESPONDIENTE A UN MOZO TRAS HABER REALIZADO UNA VENTA
 bool actualizar_comision(int id_mozo, float comision);
-
+//FUNCION PRINCIPAL: ABRE O CREA (SI NO EXISTE) EL ARCHIVO DE LA PLANILLA DEL DIA Y PERMITE CARGAR NUEVAS VENTAS
 void generar_planilla_del_dia(char nombre_del_archivo[]);
+/*DEJA ORDENADA LA PLANILLA DEL DIA (POR ID_MOZO)*/
 void ordenar(char nombre_del_archivo[]);
 
 //FUNCIONES AUXILIARES (NO FORMAN PARTE DEL CODIGO DEFINITIVO)
@@ -36,7 +53,8 @@ void ordenar(char nombre_del_archivo[]);
 //void mostrar_inventario();
 
 
-//MAIN
+
+/*  -----   MAIN   -----  */
 int main(){
     
     char nombre_del_archivo[24];
@@ -49,7 +67,10 @@ int main(){
     //mostrar_inventario();
 }
 
-//DEFINICION DE FUNCIONES
+
+
+/*  -----   DEFINICION DE FUNCIONES   -----  */
+
 void ingreso_fecha(int &dia, int &mes, int &anio){
     //Medida de control: verifica que la fecha exista para que Alberto no pueda cometer errores a la hora de cargar la fecha
     bool valido=false;
@@ -117,6 +138,7 @@ bool login_mozo(int &id_mozo, char clave[]){     //DEVUELVE 1 SI SE INGRESARON D
     Mozo m;
     bool encontrado=false;
 
+    //SOLICITA LOS DATOS CONTINUAMENTE HASTA QUE EL MOZO SE LOGUEE CORRECTAMENTE
     do{
         cout << endl << "Ingrese ID del mozo: ";
         cin >> id_mozo;
@@ -146,13 +168,13 @@ bool login_mozo(int &id_mozo, char clave[]){     //DEVUELVE 1 SI SE INGRESARON D
     } while(encontrado==false);
     
     fclose(arch_mozos);
-    return 1;
+    return 1;   //mozo logueado correctamente
 }
 
 void codificar_clave(char clave[]) {
     int i = 0;
 
-    while(clave[i] != '\0') {
+    while(clave[i] != '\0') {   //suma K a todos los caracteres de la clave para codificarla
         clave[i] += K;
         i++;
     }
@@ -161,7 +183,7 @@ void codificar_clave(char clave[]) {
 bool comparar_claves(char clave_ingresada[], char clave_guardada[]){
     int i = 0;
 
-    while(clave_ingresada[i] != '\0' && clave_guardada[i] != '\0'){
+    while(clave_ingresada[i] != '\0' && clave_guardada[i] != '\0'){ //compara ambas claves caracter por caracter
         if(clave_ingresada[i] != clave_guardada[i]){
             return false;
         }
@@ -180,6 +202,7 @@ bool actualizar_inventario(int &codigo_producto, int &cantidad, float &comision)
     long posicion_prod = -1;
     bool error_stock = true;
 
+    //PIDE INGRESO DE CODIGO DE PRODUCTO. SI EL CODIGO INGRESADO NO EXISTE, VUELVE A PEDIR HASTA QUE SE INGRESE UNO QUE SI EXISTA
     do{
         cout << "Ingrese codigo de producto: ";
         cin >> codigo_producto;
@@ -221,12 +244,14 @@ bool actualizar_inventario(int &codigo_producto, int &cantidad, float &comision)
 
     prod.stockActual-=cantidad;
 
+    //posiciono el puntero sobre el producto correspondiente para sobreescribir su cantidad
     fseek(arch_inventario, posicion_prod*sizeof(Producto),SEEK_SET);   
     fwrite(&prod, sizeof(Producto),1,arch_inventario);
     
     fclose(arch_inventario);
 
-    comision= prod.precio * cantidad * TASA_COMISION;
+    //calculo el valor de la comision correspondiente a la venta realizada
+    comision = prod.precio * cantidad * TASA_COMISION;
     
     return true;
 }
@@ -276,6 +301,7 @@ bool actualizar_comision(int id_mozo, float comision){
         return false;
     }
 
+    //actualizo la comision del mozo y sobreescribo el archivo
     m.totalComision+=comision;
     fseek(arch_mozos, pos*sizeof(m), SEEK_SET);
     fwrite(&m,sizeof(Mozo),1,arch_mozos);
@@ -299,20 +325,20 @@ void generar_nombre_del_archivo(char nombre_archivo[]){
     nombre_archivo[7] = 's';
     nombre_archivo[8] = '_';
 
-    nombre_archivo[9] = '0' + dia / 10;
-    nombre_archivo[10] = '0' + dia % 10;
+    nombre_archivo[9] = '0' + dia / 10;     //DECENAS
+    nombre_archivo[10] = '0' + dia % 10;    //UNIDADES
 
     nombre_archivo[11] = '-';
 
-    nombre_archivo[12] = '0' + mes / 10;
-    nombre_archivo[13] = '0' + mes % 10;
+    nombre_archivo[12] = '0' + mes / 10;    //DECENAS
+    nombre_archivo[13] = '0' + mes % 10;    //UNIDADES
 
     nombre_archivo[14] = '-';
 
-    nombre_archivo[15] = '0' + anio / 1000;
-    nombre_archivo[16] = '0' + (anio / 100) % 10;
-    nombre_archivo[17] = '0' + (anio / 10) % 10;
-    nombre_archivo[18] = '0' + anio % 10;
+    nombre_archivo[15] = '0' + anio / 1000;            //UNIDAD DE MIL
+    nombre_archivo[16] = '0' + (anio / 100) % 10;      //CENTENAS
+    nombre_archivo[17] = '0' + (anio / 10) % 10;       //DECENAS
+    nombre_archivo[18] = '0' + anio % 10;              //UNIDADES
 
     nombre_archivo[19] = '.';
     nombre_archivo[20] = 'd';
@@ -336,32 +362,33 @@ void generar_planilla_del_dia(char nombre_del_archivo[]){
         
     int seguir=1;    
 
+    //Permite cargar ventas hasta que ya no se deseen cargar mas (seguir=0)
     while(seguir==1){
         int id_mozo; char clave[20];
-        bool login=login_mozo(id_mozo, clave);
 
-        if(login==false){
+        if(login_mozo(id_mozo, clave)==false){  //no se pudo abrir Mozos.dat
             cout << "Error con el login. Reintentelo mas tarde." << endl;
             fclose(planilla);
             return;
         }
         
-        else{
+        else{   //LOGIN EXITOSO
             int codigo_producto, cantidad;
             float comision;
 
-            if(actualizar_inventario(codigo_producto,cantidad,comision)==false){
+            if(actualizar_inventario(codigo_producto,cantidad,comision)==false){    //no se pudo abrir Inventario.dat
                 cout << "Ha ocurrido un error durante la actualizacion del inventario. Reintentelo mas tarde.";
                 fclose(planilla);
                 return;
             }
 
-            if(actualizar_comision(id_mozo, comision)==false){
+            if(actualizar_comision(id_mozo, comision)==false){  //no se pudo abrir Mozos.dat
                 cout << "Ha ocurrido un error durante la actualizacion de la comision. Reintentelo mas tarde.";
                 fclose(planilla);
                 return;
             }
             
+            //la venta esta lista para ser cargada en la planilla del dia
             Comanda venta;
             venta.idMozo=id_mozo;
             venta.codigoProducto=codigo_producto;
@@ -373,7 +400,7 @@ void generar_planilla_del_dia(char nombre_del_archivo[]){
             cout << endl << "Desea cargar otra venta? (0: No | 1: Si): ";
             cin >> seguir;
 
-            while(seguir!=0 && seguir!=1){
+            while(seguir!=0 && seguir!=1){  //SELECCION INVALIDA
                 cout << "Error. Ingrese un numero valido (0: No | 1: Si): ";
                 cin >> seguir;
             }
@@ -453,7 +480,7 @@ void leer_planilla_del_dia(char nombre_archivo[]){      //funcion auxiliar para 
 }
 */
 /*
-void mostrar_inventario(){
+void mostrar_inventario(){      //IMPRIME EL INVENTARIO, SIRVE PARA VERIFICAR QUE SE CONSUMAN LOS PRODUCTOS AL SER VENDIDOS
     FILE* arch=fopen("inventario.dat","rb");
     if(arch==NULL){
         cout <<"error al leer el inventario"<<endl;
