@@ -18,7 +18,7 @@ int main() {
     int diaDelMes = getDiasDelMes(mes, anio);
     int dia = 1; // Representa el dia del mes
     int numeroDeSemana = 1;
-
+    bool existComandasEnElMes = false;
     //se guardan en archivos temporales las comandas para su apareo posterios
     const char* temporal1 = "temporal1.dat";
     const char* temporal2 = "temporal2.dat";
@@ -40,6 +40,7 @@ int main() {
                 if(!existDia) { //Cuando registra por primera vez un dia con venta de esa semana
                     copiarContenido(nombreDia, actual);
                     existDia = true;
+                    existComandasEnElMes = true;
                 } else {
                     apareoDePlanillas(actual, nombreDia, siguiente);
                     const char* aux = actual; //swap para intercambiar los roles de lectura o escritura
@@ -59,6 +60,13 @@ int main() {
             copiarContenido(actual, nombreSemanal); //actual -> acumulado en la semana
             numeroDeSemana++;
         }
+
+    }
+
+    if(existComandasEnElMes) {
+        cout << "Se generaron: " << numeroDeSemana - 1 << " semanas" << endl; //Queda una semana adelantada al final, por eso el -1
+    } else {
+        cout << "No se registraron comandas de esa fecha: [mm/aaaa]" << mes << "/" << anio << endl;
     }
 
     //Se borran ambos archivos temporales
@@ -74,7 +82,7 @@ void copiarContenido(const char* leer, const char* escribir) {
     Comanda c;
 
     if(origen == NULL || destino == NULL) {
-        cout << "Error de apertura en la copia del contenido" << endl;
+        cout << "Error de apertura en: " << leer << " o " << escribir << endl;
         return;
     }
 
@@ -105,7 +113,7 @@ void apareoDePlanillas(const char* nomA, const char* nomB, const char* nomC) {
     FILE* nuevaPlanilla = fopen(nomC, "wb");
 
     if(planillaA == NULL || planillaB == NULL || nuevaPlanilla == NULL){
-        cout << "Error al abrir los archivos" << endl;
+        cout << "Error al abrir los archivos: " << nomA << ", " << nomB << " o " << nomC << endl;
         return;
     }
     
