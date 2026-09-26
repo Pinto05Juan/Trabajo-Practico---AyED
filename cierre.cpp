@@ -17,7 +17,8 @@ int main() {
 
     int diaDelMes = getDiasDelMes(mes, anio);
     int dia = 1; // Representa el dia del mes
-    int numeroDeSemana = 1;
+    int numeroDeSemana = 1; //semanas del mes calendario
+    int semenasGeneradas = 0; //cantidad de semanas generadas por archivo
     bool existComandasEnElMes = false;
     //se guardan en archivos temporales las comandas para su apareo posterios
     const char* temporal1 = "temporal1.dat";
@@ -58,13 +59,14 @@ int main() {
             char nombreSemanal[26];
             generarNombreDelArchivoSemanal(nombreSemanal, numeroDeSemana, mes);
             copiarContenido(actual, nombreSemanal); //actual -> acumulado en la semana
-            numeroDeSemana++;
+            semenasGeneradas++;
         }
-
+        
+        numeroDeSemana++;
     }
 
     if(existComandasEnElMes) {
-        cout << "Se generaron: " << numeroDeSemana - 1 << " semanas" << endl; //Queda una semana adelantada al final, por eso el -1
+        cout << "Se generaron: " << semenasGeneradas << " semanas" << endl; //Queda una semana adelantada al final, por eso el -1
     } else {
         cout << "No se registraron comandas de esa fecha: [mm/aaaa]" << mes << "/" << anio << endl;
     }
