@@ -17,7 +17,7 @@ const float TASA_COMISION = 0.10f; // la comision de cada venta es el 10% de lo 
 const int K = 7; //codificacion de clave
 const int ID_INICIAL = 100;
 const long ERROR_ABRIENDO_INVENTARIO = -10;
-
+const int ABORTAR_PROCESO = -1;     //finalizar el proceso a la fuerza (login, ingreso de codigo de producto o ingreso de cantidad)
 
 
 /*  -----   PROTOTIPOS DE LAS FUNCIONES   -----  */
@@ -26,7 +26,8 @@ void ingreso_fecha(int &dia, int &mes, int &anio);
 //CARGA EN UN ARRAY EL NOMBRE DEL ARCHIVO ("DD-MM-AAAA.DAT")
 void generar_nombre_del_archivo(char nombre_archivo[]);
 
-/*PIDE EL ID Y CLAVE DE UN MOZO Y LO BUSCA EN MOZOS.DAT . DEVUELVE 1 SI EL LOGIN FUE EXITOSO O 0 SI OCURRIO UN ERROR CON EL ARCHIVO
+/*PIDE EL ID Y CLAVE DE UN MOZO Y LO BUSCA EN MOZOS.DAT . 
+DEVUELVE 1 SI EL LOGIN FUE EXITOSO O 0 SI OCURRIO UN ERROR CON EL ARCHIVO O SE ABORTO EL LOGIN A LA FUERZA 
 (VERIFICACIONES DE VALIDEZ INCLUIDAS) */
 bool login_mozo(int &id_mozo, char clave[]);
 //CODIFICA LA CLAVE INGRESADA EN LA FUNCION "login_mozo"  
@@ -51,12 +52,11 @@ void ordenar(char nombre_del_archivo[]);
 
 //void leer_planilla_del_dia(char nombre_archivo[]);
 //void mostrar_inventario();
-
+//void mostrar_mozos();
 
 
 /*  -----   MAIN   -----  */
 int main(){
-    
     char nombre_del_archivo[24];
     
     generar_nombre_del_archivo(nombre_del_archivo);
@@ -65,6 +65,7 @@ int main(){
     //funciones auxiliares para verificar el funcionamiento del programa
     //leer_planilla_del_dia(nombre_del_archivo);
     //mostrar_inventario();
+    //mostrar_mozos();
 }
 
 
@@ -128,11 +129,12 @@ void ingreso_fecha(int &dia, int &mes, int &anio){
 }
 
 bool login_mozo(int &id_mozo, char clave[]){     //DEVUELVE 1 SI SE INGRESARON DATOS CORRECTOS O 0 SI OCURRIO UN ERROR CON EL ARCHIVO
-    FILE* arch_mozos=fopen("Mozos.dat","rb");
+    FILE* arch_mozos=fopen("mozos.dat","rb");
 
     if(arch_mozos==NULL){
-        cout << "No se pudo abrir el archivo 'Mozos.dat'" << endl;
-        return 0;
+        cout << "No se pudo abrir el archivo 'mozos.dat'" << endl;
+        cout << "Error con el login. Reintentelo mas tarde." << endl;
+        return false;
     }
     
     Mozo m;
@@ -142,6 +144,13 @@ bool login_mozo(int &id_mozo, char clave[]){     //DEVUELVE 1 SI SE INGRESARON D
     do{
         cout << endl << "Ingrese ID del mozo: ";
         cin >> id_mozo;
+
+        //opcion para finalizar el programa en esta etapa por cuestiones de fuerza mayor
+        //ej: mozo olvida su clave
+        if(id_mozo == ABORTAR_PROCESO){    
+            cout << "Programa finalizado a la fuerza por el usuario."<<endl;
+            return false;
+        }
 
         cout << "Ingrese clave: ";
         cin >> clave;
@@ -168,7 +177,7 @@ bool login_mozo(int &id_mozo, char clave[]){     //DEVUELVE 1 SI SE INGRESARON D
     } while(encontrado==false);
     
     fclose(arch_mozos);
-    return 1;   //mozo logueado correctamente
+    return true;   //mozo logueado correctamente
 }
 
 void codificar_clave(char clave[]) {
@@ -207,14 +216,23 @@ bool actualizar_inventario(int &codigo_producto, int &cantidad, float &comision)
         cout << "Ingrese codigo de producto: ";
         cin >> codigo_producto;
         
+        if(codigo_producto == ABORTAR_PROCESO){
+            cout << "Programa finalizado a la fuerza por el usuario."<<endl;
+            return false;
+        }
+
         //busco el producto en el archivo
         posicion_prod=busquedaBinaria("inventario.dat", codigo_producto, prod);
 
         if(posicion_prod==ERROR_ABRIENDO_INVENTARIO){
             return false;
         }
-        else if(posicion_prod==-1){
+        if(posicion_prod==-1){
             cout << "Producto no encontrado. Reintentar." << endl;
+        }
+        else if (prod.stockActual == 0) {
+            cout << "'" << prod.descripcion << "' sin stock. Elija otro producto." << endl;
+            posicion_prod = -1; // fuerza a volver a pedir el codigo
         }
     } while(posicion_prod==-1);
 
@@ -222,12 +240,17 @@ bool actualizar_inventario(int &codigo_producto, int &cantidad, float &comision)
         cout << "Ingrese cantidad: ";
         cin >> cantidad;
 
+        if(cantidad == ABORTAR_PROCESO){
+            cout << "Programa finalizado a la fuerza por el usuario."<<endl;
+            return false;
+        }
+
         if(cantidad<=0){
             cout << "La cantidad ingresada no es valida. Reintentar." << endl;
         }
 
         else if(prod.stockActual-cantidad < 0){
-            cout << "No hay suficiente stock. La cantidad ingresada es incorrecta. Reintentar." << endl;
+            cout << "La cantidad ingresada excede al stock disponible. Reintentar." << endl;
         }
         else{
             error_stock=false;
@@ -238,7 +261,7 @@ bool actualizar_inventario(int &codigo_producto, int &cantidad, float &comision)
     FILE* arch_inventario=fopen("inventario.dat","rb+");
 
     if(arch_inventario==NULL){
-        cout << "No se pudo abrir el archivo 'Inventario.dat'. Intentelo mas tarde." << endl;
+        cout << "No se pudo abrir el archivo 'inventario.dat'. Intentelo mas tarde." << endl;
         return false;
     }
 
@@ -256,7 +279,7 @@ bool actualizar_inventario(int &codigo_producto, int &cantidad, float &comision)
     return true;
 }
 
-long busquedaBinaria(const char* nombre, int codigo, Producto &p) {
+long busquedaBinaria(const char* nombre, int codigo, Producto &p) {     //inventario ordenado por codigo de producto
     FILE* f = fopen(nombre, "rb");
     if (f == NULL){
         cout << "No se pudo abrir 'inventario.dat'"<<endl;
@@ -281,10 +304,10 @@ long busquedaBinaria(const char* nombre, int codigo, Producto &p) {
 }
 
 bool actualizar_comision(int id_mozo, float comision){
-    FILE* arch_mozos=fopen("Mozos.dat","rb+");
+    FILE* arch_mozos=fopen("mozos.dat","rb+");
 
     if(arch_mozos==NULL){
-        cout << "No se pudo abrir el archivo 'Mozos.dat'. Intentelo mas tarde";
+        cout << "No se pudo abrir el archivo 'mozos.dat'. Intentelo mas tarde";
         return false;
     }
     
@@ -358,6 +381,7 @@ void generar_planilla_del_dia(char nombre_del_archivo[]){
     cout << endl <<"Bienvenido a la planilla del dia " << nombre_del_archivo[9] << nombre_del_archivo[10] 
     << "/" << nombre_del_archivo[12] << nombre_del_archivo[13] 
     << "/" << nombre_del_archivo[15]  << nombre_del_archivo[16] << nombre_del_archivo[17] << nombre_del_archivo[18] 
+    << endl << "Si desea abortar alguna operacion, ingrese '-1' para finalizar el programa" << endl
     << endl << "Cargue todas las ventas correspondientes: " << endl << endl;
         
     int seguir=1;    
@@ -366,9 +390,10 @@ void generar_planilla_del_dia(char nombre_del_archivo[]){
     while(seguir==1){
         int id_mozo; char clave[20];
 
-        if(login_mozo(id_mozo, clave)==false){  //no se pudo abrir Mozos.dat
-            cout << "Error con el login. Reintentelo mas tarde." << endl;
+        if(login_mozo(id_mozo, clave)==false){  //no se pudo abrir mozos.dat o se finalizo el programa a la fuerza
             fclose(planilla);
+            ordenar(nombre_del_archivo);
+            cout << "Planilla del dia cerrada con las ventas cargadas hasta el momento."<<endl;
             return;
         }
         
@@ -376,15 +401,17 @@ void generar_planilla_del_dia(char nombre_del_archivo[]){
             int codigo_producto, cantidad;
             float comision;
 
-            if(actualizar_inventario(codigo_producto,cantidad,comision)==false){    //no se pudo abrir Inventario.dat
-                cout << "Ha ocurrido un error durante la actualizacion del inventario. Reintentelo mas tarde.";
+            if(actualizar_inventario(codigo_producto,cantidad,comision)==false){    //no se pudo abrir inventario.dat o se finalizo el programa a la fuerza 
                 fclose(planilla);
+                ordenar(nombre_del_archivo);
+                cout << "Planilla del dia cerrada con las ventas cargadas hasta el momento."<<endl;
                 return;
             }
 
-            if(actualizar_comision(id_mozo, comision)==false){  //no se pudo abrir Mozos.dat
+            if(actualizar_comision(id_mozo, comision)==false){  //no se pudo abrir mozos.dat
                 cout << "Ha ocurrido un error durante la actualizacion de la comision. Reintentelo mas tarde.";
                 fclose(planilla);
+                ordenar(nombre_del_archivo);
                 return;
             }
             
@@ -461,7 +488,6 @@ void ordenar(char nombre_del_archivo[]){
 
 
 //FUNCIONES AUXILIARES (NO FORMAN PARTE DEL PROGRAMA DEFINITIVO, SOLO SE USAN PARA PROBAR EL FUNCIONAMIENTO)
-
 /*
 void leer_planilla_del_dia(char nombre_archivo[]){      //funcion auxiliar para imprimir comandas_dd-mm-aaaa y verificar que este ordenado
     FILE* arch=fopen(nombre_archivo,"rb");
@@ -478,8 +504,7 @@ void leer_planilla_del_dia(char nombre_archivo[]){      //funcion auxiliar para 
     }
     fclose(arch);
 }
-*/
-/*
+
 void mostrar_inventario(){      //IMPRIME EL INVENTARIO, SIRVE PARA VERIFICAR QUE SE CONSUMAN LOS PRODUCTOS AL SER VENDIDOS
     FILE* arch=fopen("inventario.dat","rb");
     if(arch==NULL){
@@ -495,4 +520,21 @@ void mostrar_inventario(){      //IMPRIME EL INVENTARIO, SIRVE PARA VERIFICAR QU
 
     fclose(arch);
 }
+
+void mostrar_mozos(){      //IMPRIME LA LISTA DE TODOS LOS MOZOS Y SU COMISION HASTA EL MOMENTO
+    FILE* arch=fopen("mozos.dat","rb");
+    if(arch==NULL){
+        cout <<"error al leer mozos.dat"<<endl;
+        return;
+    }
+
+    Mozo m;
+    cout<< endl;
+    while(fread(&m, sizeof(Mozo),1,arch)){
+        cout<< endl<< "Nombre: " <<m.nombre <<"    ID: "<<m.idMozo << "  Comision: $"<<m.totalComision<<endl;
+    }
+
+    fclose(arch);
+}
+
 */
