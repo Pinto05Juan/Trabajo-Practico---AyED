@@ -4,21 +4,29 @@ Trabajo Práctico grupal de **Algoritmos y Estructuras de Datos** (UTN FRBA) —
 unidad de **archivos binarios en C/C++**.
 
 > **Grupo:** _no se asignaron numeros de grupo_
+
 > **Integrantes:** _(nombre — usuario de GitHub, uno por línea)_
+
 _Juan Bautista Alamos - Juanba290806_
+
 _Tomas Aranda - tomasaranda333_
+
 _Tiago Nicosia - tnicosia7_
+
 _Pinto Juan - Pinto05Juan_
+
 _Tomás Loiterstein - tloiterstein_
 
-**Aclaración sobre el nombre de Normalización.cpp**
-El programa de normalización se encuentra en el archivo Normalización.cpp, con N mayúscula, en lugar de normalización.cpp, que es el nombre indicado en la consigna.
+**Aclaración sobre el nombre de `Normalización.cpp`**
+
+El programa de normalización se encuentra en el archivo `Normalización.cpp`, con N mayúscula, en lugar de `normalización.cpp`, que es el nombre indicado en la consigna.
 
 No nos dimos cuenta cuando lo creamos ya que Windows normalmente no distingue mayúsculas y minúsculas en los nombres de archivos. Para evitar modificar el historial de commits del repositorio, se decidió conservar el nombre actual.
 El profesor fue consultado sobre esta diferencia y confirmó que no es necesario renombrar el archivo.
 
-**Aclaración sobre el nombre de Ventas.cpp**
-El programa de ventas se encuentra en el archivo Ventas.cpp (con V mayúscula) en lugar de ventas.cpp (con v minúscula), que es el nombre indicado en la consigna.
+**Aclaración sobre el nombre de `Ventas.cpp`**
+
+El programa de ventas se encuentra en el archivo `Ventas.cpp` (con V mayúscula) en lugar de `ventas.cpp` (con v minúscula), que es el nombre indicado en la consigna.
 
 No nos dimos cuenta cuando lo creamos ya que Windows normalmente no distingue mayúsculas y minúsculas en los nombres de archivos. Para evitar modificar el historial de commits del repositorio, se decidió conservar el nombre actual.
 El profesor fue consultado sobre esta diferencia y confirmó que no es necesario renombrar el archivo.
@@ -28,7 +36,9 @@ El profesor fue consultado sobre esta diferencia y confirmó que no es necesario
 # Normalización:
 
 _Responsables:_ 
+
 _Juan Bautista Alamos - Juanba290806_
+
 _Tomas Aranda - tomasaranda333_
 
 Este es el primer programa a ejecutar ya que se encarga de dejar listos los archivos de datos que van a ser utilizados por los demás programas. 
@@ -54,11 +64,13 @@ El programa se encarga de inicializar el nuevo sistema. Procesa el registro viej
 _Responsable: Tiago Nicosia - tnicosia7_
 
 **Explicación breve del funcionamiento:**
+
 El programa permite cargar las ventas de un día (por cada venta, se pide el logueo del mozo, el código de producto y la cantidad vendida). Primero solicita la fecha y genera el nombre correspondiente de la planilla (`comandas_dd-mm-aaaa.dat`). Si la planilla no existe, se crea; si ya existe, se agregan las nuevas ventas.
 
 Ventas.cpp es el segundo programa a ejecutar. Permite agregar ventas a las comandas creadas en Normalizacion.cpp o crear nuevas comandas.
 
 **Resolución de puntos clave**
+
 -Planilla diaria: se abre `comandas_dd-mm-aaaa.dat` en modo ab+ porque necesitamos agregar las nuevas ventas al final del archivo y, en caso de que la planilla todavía no exista, crearla. Al finalizar la carga, el archivo se cierra para luego ordenarlo.
 
 -Login: se abre `mozos.dat` en modo rb porque solo necesitamos leer los datos del mozo, sin modificarlos. Se busca el mozo utilizando su ID para calcular directamente su posición (ID - 100). Esto se puede hacer ya que los mozos están ordenados por ID (consecutivos, es decir, sin huecos) y se conoce el valor inicial. Luego se codifica la clave ingresada y se compara carácter por carácter con la almacenada.
@@ -77,9 +89,11 @@ Ventas.cpp es el segundo programa a ejecutar. Permite agregar ventas a las coman
 _Responsable: Pinto Juan - Pinto05Juan_
 
 **Explicación breve del funcionamiento:**
+
 El programa permite juntar las comandas diarias generadas anteriormente para crear varias comandas semanales de un mes correspondiente. El programa pide al usuario que ingrese un mes y año, junta las planillas de cada semana en un mes y genera `comandas_semana_sX-mm.dat`, una por cada semana.
 
 **Resolución de puntos clave:**
+
 -Técnica usada para juntar las comandas: Como las comandas diarias ya vienen ordenadas por un campo clave (idMozo), usamos apareo para juntarlas correctamente sin perder ese orden.
 
 -Un día sin comandas (sin ventas): Para los casos de días sin ventas, esto se maneja mediante un condicional verificando si existe el nombre de ese archivo. Al no encontrar ese archivo, seguimos iterando al proximo dia.
@@ -92,6 +106,7 @@ El programa permite juntar las comandas diarias generadas anteriormente para cre
 _Responsable: Tomás Loiterstein - tloiterstein_
 
 **Explicación breve del funcionamiento:**
+
 El programa de resumen se ejecuta al finalizar el cierre semanal, ya que necesita que previamente se haya generado la planilla semanal `comandas_semana_sX-mm.dat`. Primero solicita el número de semana y el mes para generar el nombre del archivo que debe leer. Luego abre esa planilla en modo lectura y recorre todas las comandas.
 
 Como las comandas de la planilla semanal ya se encuentran ordenadas por `idMozo`, podemos recorrerlas secuencialmente y acumular para cada mozo la cantidad de productos vendidos y la comisión correspondiente. Cuando cambia el `idMozo`, mostramos el resumen del mozo anterior y comenzamos a acumular los datos del siguiente.
@@ -99,6 +114,7 @@ Como las comandas de la planilla semanal ya se encuentran ordenadas por `idMozo`
 Al finalizar, mostramos el total de productos vendidos por el buffet durante toda la semana. Además, como funcionalidad extra, calculamos y mostramos la facturación total de la semana.
 
 **Resolución de puntos clave**
+
 -Generación del nombre del archivo: solicitamos el número de semana y el mes y armamos el nombre con el formato `comandas_semana_sX-mm.dat`, que es el archivo generado por el programa de cierre y que necesitamos leer.
 
 -Lectura de la planilla semanal: abrimos `comandas_semana_sX-mm.dat` en modo `rb` porque solamente necesitamos leer las comandas y no modificar el archivo.
