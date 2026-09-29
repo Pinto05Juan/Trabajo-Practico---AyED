@@ -8,15 +8,15 @@ unidad de **archivos binarios en C/C++**.
 > **Integrantes:** _(nombre — usuario de GitHub, uno por línea)_
 
 ```bash
-_Juan Bautista Alamos - Juanba290806_
+Juan Bautista Alamos - Juanba290806
 
-_Tomas Aranda - tomasaranda333_
+Tomas Aranda - tomasaranda333
 
-_Tiago Nicosia - tnicosia7_
+Tiago Nicosia - tnicosia7
 
-_Pinto Juan - Pinto05Juan_
+Pinto Juan - Pinto05Juan
 
-_Tomás Loiterstein - tloiterstein_
+Tomás Loiterstein - tloiterstein
 ```
 
 ## Aclaración sobre el nombre de `Normalización.cpp`
