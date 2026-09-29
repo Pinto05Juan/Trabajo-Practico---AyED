@@ -117,16 +117,20 @@ void generarResumen(const char nombreArchivo[])
 
     int mozoActual = -1;
     int productosVendidos = 0;
+    int totalProductos = 0;
+
     float comisionMozo = 0;
-    float totalBuffet = 0;
+    float totalFacturado = 0;
 
     while (fread(&comanda, sizeof(Comanda), 1, archivo) == 1)
     {
+        // Primera comanda que leemos
         if (mozoActual == -1)
         {
             mozoActual = comanda.idMozo;
         }
 
+        // Si cambia el mozo, mostramos el resumen del anterior
         if (comanda.idMozo != mozoActual)
         {
             cout << "Mozo: " << mozoActual << endl;
@@ -134,22 +138,29 @@ void generarResumen(const char nombreArchivo[])
             cout << "Comision: $" << comisionMozo << endl;
             cout << endl;
 
+            // Empezamos a acumular para el nuevo mozo
             mozoActual = comanda.idMozo;
             productosVendidos = 0;
             comisionMozo = 0;
         }
 
+        // Acumulamos los datos del mozo actual
         productosVendidos += comanda.cantidad;
         comisionMozo += comanda.comision;
 
+        // Acumulamos el total de productos vendidos por todo el buffet
+        totalProductos += comanda.cantidad;
+
+        // Dato extra: calculamos la facturacion total
         float precio = buscarPrecio(comanda.codigoProducto);
 
         if (precio != -1)
         {
-            totalBuffet += precio * comanda.cantidad;
+            totalFacturado += precio * comanda.cantidad;
         }
     }
 
+    // Mostramos el ultimo mozo
     if (mozoActual != -1)
     {
         cout << "Mozo: " << mozoActual << endl;
@@ -158,10 +169,14 @@ void generarResumen(const char nombreArchivo[])
         cout << endl;
     }
 
-    cout << "Total del buffet: $" << totalBuffet << endl;
+    // Datos finales de toda la semana
+    cout << "Total de productos vendidos por el buffet: "
+         << totalProductos << endl;
+
+    cout << "(Dato extra) Facturacion total de la semana: $"
+         << totalFacturado << endl;
 
     fclose(archivo);
 }
-
 
 
